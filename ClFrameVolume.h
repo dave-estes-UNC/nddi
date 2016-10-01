@@ -469,7 +469,7 @@ public:
                                                    p_row_pitch, p_slice_pitch,
                                                    pixels_, 0, NULL, pEvent);
                 if (err != CL_SUCCESS) {
-                    cout << __FUNCTION__ << " - Failed to create enqueue write buffer command." << err << endl;
+                    cout << __FUNCTION__ << " - Failed to create enqueue write buffer command. err = " << err << endl;
                 }
 
 #ifdef CL_PROFILING_ENABLED

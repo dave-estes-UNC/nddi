@@ -149,9 +149,9 @@ void ClNddiDisplay::InitializeCl() {
 
     // Get an ID for the device
     err = clGetDeviceIDs(clPlatformId_, CL_DEVICE_TYPE_GPU, 1, &clDeviceId_, NULL);
-    //err = clGetDeviceIDs(NULL, CL_DEVICE_TYPE_CPU, 1, &clDeviceId_, NULL);
+    //err = clGetDeviceIDs(clPlatformId_, CL_DEVICE_TYPE_CPU, 1, &clDeviceId_, NULL);
     if (err != CL_SUCCESS) {
-        cout << "Failed to get device IDs." << endl;
+      cout << "Failed to get device IDs. err = " << err << endl;
         Cleanup(true);
     }
 

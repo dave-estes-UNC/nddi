@@ -102,8 +102,8 @@ namespace nddi {
          *                                    Each element in the vector represents a dimension and that element's
          *                                    value represents the size of that dimension. e.g. a simple 4x4 2D
          *                                    frame volume will be configured with a two-element vector with 4 and 4 in it.
-         * @param displayWidth Used to configure the width of the diplay if it is less than the display device.
-         * @param displayHeight Used to configure the width of the diplay if it is less than the display device.
+         * @param displayWidth Used to configure the width of the display if it is less than the display device.
+         * @param displayHeight Used to configure the width of the display if it is less than the display device.
          * @param inputVectorSize Used to configure the size of the input vector. It must be greater than or equal to two.
          */
         NDimensionalDisplayInterface(vector<unsigned int> &frameVolumeDimensionalSizes,

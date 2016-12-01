@@ -44,12 +44,6 @@
 #define USE_COPY_PIXEL_TILES
 
 /*
- * Resets the cost model immediately after the tiler setup is complete.
- * Useful for considering the performance of a tiler with said setup.
- */
-#define CLEAR_COST_MODEL_AFTER_SETUP
-
-/*
  * Used to dramatically narrow the various data stores. Can lead to bugs, so proceed carefully.
  */
 #define NARROW_DATA_STORES

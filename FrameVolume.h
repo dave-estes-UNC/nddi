@@ -12,7 +12,6 @@
 #include <cstdlib>
 #include <cassert>
 
-#include "Configuration.h"
 #include "NDimensionalDisplayInterface.h"
 
 using namespace std;
@@ -37,7 +36,7 @@ namespace nddi {
             for (int i = 0; i < dimensionalSizes_.size(); i++) {
                 size_ *= dimensionalSizes_[i];
             }
-            if (!globalConfiguration.headless) {
+            if (!costModel_->isHeadless()) {
                 pixels_ = (Pixel *)malloc(sizeof(Pixel) * size_);
                 memset(pixels_, 0x00, sizeof(Pixel) * size_);
             }
@@ -59,7 +58,7 @@ namespace nddi {
         }
 
         void PutPixel(Pixel p, vector<unsigned int> &location) {
-            if (!globalConfiguration.headless) {
+            if (!costModel_->isHeadless()) {
                 setPixel(location, p);
             } else {
                 costModel_->registerBulkMemoryCharge(FRAME_VOLUME_COMPONENT,
@@ -83,7 +82,7 @@ namespace nddi {
                 }
             }
 
-            if (!globalConfiguration.headless) {
+            if (!costModel_->isHeadless()) {
                 vector<unsigned int> position = start;
                 for (int j = 0; j <= end[dimensionToCopyAlong] - start[dimensionToCopyAlong]; j++) {
                     setPixel(position, p[j]);
@@ -108,7 +107,7 @@ namespace nddi {
             // Move from start to end, filling in each location with the provided pixel
             do {
                 // Set pixel in frame volume at position
-                if (!globalConfiguration.headless)
+                if (!costModel_->isHeadless())
                     setPixel(position, p[pixelsCopied]);
                 pixelsCopied++;
 
@@ -129,7 +128,7 @@ namespace nddi {
 
             } while (!copyFinished);
 
-            if (globalConfiguration.headless)
+            if (costModel_->isHeadless())
                 costModel_->registerBulkMemoryCharge(FRAME_VOLUME_COMPONENT,
                                                      pixelsCopied,
                                                      WRITE_ACCESS,
@@ -147,7 +146,7 @@ namespace nddi {
             // Move from start to end, filling in each location with the provided pixel
             do {
                 // Set pixel in frame volume at position
-                if (!globalConfiguration.headless)
+                if (!costModel_->isHeadless())
                     setPixel(position, p);
                 pixelsFilled++;
 
@@ -168,7 +167,7 @@ namespace nddi {
 
             } while (!fillFinished);
 
-            if (globalConfiguration.headless)
+            if (costModel_->isHeadless())
                 costModel_->registerBulkMemoryCharge(FRAME_VOLUME_COMPONENT,
                                                      pixelsFilled,
                                                      WRITE_ACCESS,
@@ -188,7 +187,7 @@ namespace nddi {
             // Move from start to end, filling in each location with the provided pixel
             do {
                 // Set pixel in frame volume at position
-                if (!globalConfiguration.headless)
+                if (!costModel_->isHeadless())
                     setPixel(positionFrom, getPixel(positionTo));
                 pixelsCopied++;
 
@@ -211,7 +210,7 @@ namespace nddi {
 
             } while (!copyFinished);
 
-            if (globalConfiguration.headless)
+            if (costModel_->isHeadless())
                 costModel_->registerBulkMemoryCharge(FRAME_VOLUME_COMPONENT,
                                                      pixelsCopied,
                                                      WRITE_ACCESS,
@@ -227,7 +226,7 @@ namespace nddi {
             unsigned int  multiplier = 1;
 
             assert(dimensionalSizes_.size() == location.size());
-            assert(!globalConfiguration.headless);
+            assert(!costModel_->isHeadless());
 
             for (int i = 0; i < location.size(); i++) {
                 assert(location[i] < dimensionalSizes_[i]);
@@ -248,7 +247,7 @@ namespace nddi {
             unsigned int  multiplier = 1;
 
             assert(dimensionalSizes_.size() == location.size());
-            assert(!globalConfiguration.headless);
+            assert(!costModel_->isHeadless());
 
             for (int i = 0; i < location.size(); i++) {
                 assert(location[i] < dimensionalSizes_[i]);

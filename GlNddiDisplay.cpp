@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <sys/time.h>
 
-#include "PixelBridgeFeatures.h"
+#include "Features.h"
 #include "GlNddiDisplay.h"
 
 inline uint8_t CLAMP_SIGNED_BYTE(int32_t i) {

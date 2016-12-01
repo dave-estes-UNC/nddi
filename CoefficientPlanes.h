@@ -12,7 +12,6 @@
 #include <cstdlib>
 #include <cassert>
 
-#include "Configuration.h"
 #include "NDimensionalDisplayInterface.h"
 #include "CoefficientMatrix.h"
 
@@ -59,7 +58,7 @@ namespace nddi {
             coefficientMatrix_ =  new CoefficientMatrix(costModel_, matrixWidth, matrixHeight);
 
             // Alloc the actual coefficients and scalers
-            if (!globalConfiguration.headless) {
+            if (!costModel_->isHeadless()) {
                 coefficients_ = (Coeff *)malloc(CoefficientMatrix::memoryRequired(matrixWidth, matrixHeight) * displayWidth * displayHeight * numPlanes_);
                 scalers_ = (int16_t *)malloc(sizeof(int16_t) * 3 * displayWidth * displayHeight * numPlanes_);
             }
@@ -99,7 +98,7 @@ namespace nddi {
             assert(coefficientMatrix.size() == matrixWidth_);
             assert(coefficientMatrix[0].size() == matrixHeight_);
 
-            if (!globalConfiguration.headless) {
+            if (!costModel_->isHeadless()) {
                 // Examine each coefficient in the coefficient matrix vector and use it unless it's a COFFICIENT_UNCHANGED
                 for (int col = 0; col < matrixHeight_; col++) {
                     for (int row = 0; row < matrixWidth_; row++) {
@@ -140,7 +139,7 @@ namespace nddi {
             // Move from start to end, filling in each location with the provided pixel
             do {
                 // Update coefficient matrix in coefficient plane at position
-                if (!globalConfiguration.headless) {
+                if (!costModel_->isHeadless()) {
                     // Examine each coefficient in the coefficient matrix vector and use it unless it's a COFFICIENT_UNCHANGED
                     for (int col = 0; col < matrixHeight_; col++) {
                         for (int row = 0; row < matrixWidth_; row++) {
@@ -170,7 +169,7 @@ namespace nddi {
                 }
             } while (!fillFinished);
 
-            if (globalConfiguration.headless)
+            if (costModel_->isHeadless())
                 costModel_->registerBulkMemoryCharge(COEFFICIENT_PLANE_COMPONENT,
                                                      matricesFilled * (matrixHeight_ * matrixWidth_),
                                                      WRITE_ACCESS,
@@ -199,7 +198,7 @@ namespace nddi {
             // Move from start to end, filling in each location with the provided pixel
             do {
                 // Set coefficient in the coefficient matrix at this position in the coefficient plane
-                if (!globalConfiguration.headless) {
+                if (!costModel_->isHeadless()) {
                     Coeff* cm = dataCoefficient(position[0], position[1], position[2]);
                     cm[row * matrixWidth_ + col] = coefficient;
                     costModel_->registerMemoryCharge(COEFFICIENT_PLANE_COMPONENT, WRITE_ACCESS, &cm[row * width_ + col], BYTES_PER_COEFF, 0);
@@ -219,7 +218,7 @@ namespace nddi {
                 }
             } while (!fillFinished);
 
-            if (globalConfiguration.headless)
+            if (costModel_->isHeadless())
                 costModel_->registerBulkMemoryCharge(COEFFICIENT_PLANE_COMPONENT,
                                                      coefficientsFilled,
                                                      WRITE_ACCESS,
@@ -242,7 +241,7 @@ namespace nddi {
             // Move from start to end, filling in each location with the provided pixel
             do {
                 // Set scaler at this position in the coefficient plane
-                if (!globalConfiguration.headless)
+                if (!costModel_->isHeadless())
                     putScaler(position[0], position[1], position[2], scaler);
                 scalersFilled++;
 
@@ -258,7 +257,7 @@ namespace nddi {
                 }
             } while (!fillFinished);
 
-            if (globalConfiguration.headless)
+            if (costModel_->isHeadless())
                 costModel_->registerBulkMemoryCharge(COEFFICIENT_PLANE_COMPONENT,
                                                      scalersFilled,
                                                      WRITE_ACCESS,
@@ -282,7 +281,7 @@ namespace nddi {
 
             assert(x < width_);
             assert(y < height_);
-            assert(!globalConfiguration.headless);
+            assert(!costModel_->isHeadless());
 
             // TODO(CDE): Get this working properly
             costModel_->registerMemoryCharge(COEFFICIENT_PLANE_COMPONENT, WRITE_ACCESS, &scalers_[SC_OFF(x, y, p, 0)], BYTES_PER_SCALER, 0);
@@ -297,7 +296,7 @@ namespace nddi {
             assert(x < width_);
             assert(y < height_);
             assert(p < numPlanes_);
-            assert(!globalConfiguration.headless);
+            assert(!costModel_->isHeadless());
 
             // TODO(CDE): Get this working properly
             costModel_->registerMemoryCharge(COEFFICIENT_PLANE_COMPONENT, READ_ACCESS, &scalers_[p * width_ * height_ + y * width_ + x], BYTES_PER_SCALER, 0);
@@ -312,12 +311,12 @@ namespace nddi {
         }
 
         int16_t * dataScaler() {
-            assert(!globalConfiguration.headless);
+            assert(!costModel_->isHeadless());
             return scalers_;
         }
 
         Coeff * dataCoefficient(size_t x, size_t y, size_t p) {
-            assert(!globalConfiguration.headless);
+            assert(!costModel_->isHeadless());
             return &coefficients_[CP_OFF(x, y, p)];
         }
 

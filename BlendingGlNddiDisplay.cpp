@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <sys/time.h>
 
-#include "PixelBridgeFeatures.h"
+#include "Features.h"
 #include "BlendingGlNddiDisplay.h"
 
 #define CLAMPTOBYTE(color)                  \

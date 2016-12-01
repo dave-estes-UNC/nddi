@@ -13,7 +13,7 @@
 #undef DisplayHeight
 #endif
 
-#include "PixelBridgeFeatures.h"
+#include "Features.h"
 #include "ClNddiDisplay.h"
 
 using namespace nddi;

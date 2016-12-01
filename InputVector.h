@@ -13,7 +13,6 @@
 #include <cstdlib>
 #include <cassert>
 
-#include "Configuration.h"
 #include "NDimensionalDisplayInterface.h"
 
 using namespace std;
@@ -33,7 +32,7 @@ namespace nddi {
                     unsigned int size)
         : size_(0), values_(NULL), costModel_(costModel) {
 
-            if (!globalConfiguration.headless) {
+            if (!costModel_->isHeadless()) {
                 values_ = (int *)malloc(sizeof(int) * size);
                 memset(values_, 0x00, sizeof(int) * size);
             }
@@ -56,7 +55,7 @@ namespace nddi {
 
             assert(input.size() + 2 == size_);
 
-            if (!globalConfiguration.headless) {
+            if (!costModel_->isHeadless()) {
                 for (int i = 0; (i < input.size()) && ((i + 2) < size_); i++) {
                     setValue(i+2, input[i]);
                 }
@@ -73,7 +72,7 @@ namespace nddi {
         void setValue(unsigned int location, int value) {
 
             assert(location < size_);
-            assert(!globalConfiguration.headless);
+            assert(!costModel_->isHeadless());
 
             costModel_->registerMemoryCharge(INPUT_VECTOR_COMPONENT, WRITE_ACCESS, values_ + location, BYTES_PER_IV_VALUE, 0);
 
@@ -84,7 +83,7 @@ namespace nddi {
 
             assert(location > 1);
             assert(location < size_);
-            assert(!globalConfiguration.headless);
+            assert(!costModel_->isHeadless());
 
             costModel_->registerMemoryCharge(INPUT_VECTOR_COMPONENT, READ_ACCESS, values_ + location, BYTES_PER_IV_VALUE, 0);
 

@@ -2,7 +2,7 @@
 #include <cassert>
 #include <cmath>
 
-#include "PixelBridgeFeatures.h"
+#include "Features.h"
 #include "BaseNddiDisplay.h"
 
 using namespace nddi;

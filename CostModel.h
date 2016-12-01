@@ -159,6 +159,8 @@ namespace nddi {
         unsigned long frameVolumeBytesWritten;
         unsigned long frameVolumeTime;
 
+        bool headless = false;
+
     public:
 
         CostModel() {
@@ -440,6 +442,14 @@ namespace nddi {
 
         unsigned long getPixelsMapped() {
             return pixelsMapped;
+        }
+
+        bool isHeadless() {
+            return headless;
+        }
+
+        void setHeadless(bool h) {
+            headless = h;
         }
     };
 }

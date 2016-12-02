@@ -21,7 +21,8 @@ using namespace nddi;
 // public
 
 ClNddiDisplay::ClNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
-                             int numCoefficientPlanes, int inputVectorSize)
+                             int numCoefficientPlanes, int inputVectorSize,
+                             bool headless)
 :   clFrameVolume_(NULL),
     clInputVector_(NULL),
     clKernelFillCoefficient_(0),
@@ -32,7 +33,8 @@ ClNddiDisplay::ClNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
 
 ClNddiDisplay::ClNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                              int displayWidth, int displayHeight,
-                             int numCoefficientPlanes, int inputVectorSize)
+                             int numCoefficientPlanes, int inputVectorSize,
+                             bool headless)
 {
     numPlanes_ = numCoefficientPlanes;
     frameVolumeDimensionalSizes_ = frameVolumeDimensionalSizes;
@@ -41,7 +43,7 @@ ClNddiDisplay::ClNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
     quiet_ = true;
 
     // Create the CostModel
-    costModel = new CostModel();
+    costModel = new CostModel(headless);
 
     // Setup Input Vector
     clInputVector_ = new ClInputVector(costModel, inputVectorSize);

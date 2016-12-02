@@ -19,18 +19,20 @@ using namespace std;
  * Blending version of a GL NDDI Display.
  */
 class BlendingGlNddiDisplay : public GlNddiDisplay, public NDimensionalDisplayInterfaceExtended {
-    
+
 public:
     BlendingGlNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
-                          int numCoefficientPlanes, int inputVectorSize);
+                          int numCoefficientPlanes, int inputVectorSize,
+                          bool headless = false);
     BlendingGlNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                           int displayWidth, int displayHeight,
-                          int numCoefficientPlanes, int inputVectorSize);
+                          int numCoefficientPlanes, int inputVectorSize,
+                          bool headless = false);
     ~BlendingGlNddiDisplay();
-    
+
     // To satisfy the NDimensionalDisplayInterfaceExtended interface
     void CopyFrameVolume(vector<unsigned int> &start, vector<unsigned int> &end, vector<unsigned int> &dest, bool blend);
-    
+
 private:
     nddi::Pixel BlendPixel(nddi::Pixel pTo, nddi::Pixel pFrom);
 

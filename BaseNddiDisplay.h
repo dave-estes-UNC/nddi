@@ -100,10 +100,12 @@ namespace nddi {
     public:
         BaseNddiDisplay();
         BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
-                        int numCoefficientPlanes, int inputVectorSize);
+                        int numCoefficientPlanes, int inputVectorSize,
+                        bool headless = false);
         BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                         int displayWidth, int displayHeight,
-                        int numCoefficientPlanes, int inputVectorSize);
+                        int numCoefficientPlanes, int inputVectorSize,
+                        bool headless = false);
         ~BaseNddiDisplay();
         int DisplayWidth();
         int DisplayHeight();

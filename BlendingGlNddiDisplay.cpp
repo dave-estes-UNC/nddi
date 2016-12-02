@@ -26,14 +26,16 @@ using namespace nddi;
 // public
 
 BlendingGlNddiDisplay::BlendingGlNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
-                                             int numCoefficientPlanes, int inputVectorSize)
+                                             int numCoefficientPlanes, int inputVectorSize,
+                                             bool headless)
 : GlNddiDisplay(frameVolumeDimensionalSizes, numCoefficientPlanes, inputVectorSize)
 {
 }
 
 BlendingGlNddiDisplay::BlendingGlNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                                              int displayWidth, int displayHeight,
-                                             int numCoefficientPlanes, int inputVectorSize)
+                                             int numCoefficientPlanes, int inputVectorSize,
+                                             bool headless)
 : GlNddiDisplay(frameVolumeDimensionalSizes, displayWidth, displayHeight, numCoefficientPlanes, inputVectorSize)
 {
 }

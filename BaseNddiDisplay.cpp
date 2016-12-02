@@ -21,7 +21,8 @@ BaseNddiDisplay::BaseNddiDisplay() :
 {}
 
 BaseNddiDisplay::BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
-                                 int numCoefficientPlanes, int inputVectorSize) :
+                                 int numCoefficientPlanes, int inputVectorSize,
+                                 bool headless) :
         displayWidth_(0),
         displayHeight_(0),
         numPlanes_(numCoefficientPlanes),
@@ -36,7 +37,8 @@ BaseNddiDisplay::BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSiz
 
 BaseNddiDisplay::BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                                  int displayWidth, int displayHeight,
-                                 int numCoefficientPlanes, int inputVectorSize) :
+                                 int numCoefficientPlanes, int inputVectorSize,
+                                 bool headless) :
         displayWidth_(displayWidth),
         displayHeight_(displayHeight),
         numPlanes_(numCoefficientPlanes),

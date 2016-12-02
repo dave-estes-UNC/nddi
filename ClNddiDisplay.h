@@ -35,10 +35,12 @@ class ClNddiDisplay : public GlNddiDisplay, public NDimensionalDisplayInterfaceE
 
 public:
     ClNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
-                  int numCoefficientPlanes, int inputVectorSize);
+                  int numCoefficientPlanes, int inputVectorSize,
+                  bool headless = false);
     ClNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                   int displayWidth, int displayHeight,
-                  int numCoefficientPlanes, int inputVectorSize);
+                  int numCoefficientPlanes, int inputVectorSize,
+                  bool headless = false);
     ~ClNddiDisplay();
     void PutPixel(Pixel p, vector<unsigned int> &location);
     void CopyPixelStrip(Pixel* p, vector<unsigned int> &start, vector<unsigned int> &end);

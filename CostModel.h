@@ -163,7 +163,7 @@ namespace nddi {
 
     public:
 
-        CostModel() {
+        CostModel(bool headless) : headless(headless) {
             clearCosts();
         }
 

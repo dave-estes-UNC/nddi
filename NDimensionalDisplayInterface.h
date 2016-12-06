@@ -93,7 +93,7 @@ namespace nddi {
          * @param inputVectorSize Used to configure the size of the input vector. It must be greater than or equal to two.
          */
         NDimensionalDisplayInterface(vector<unsigned int> &frameVolumeDimensionalSizes,
-                                     int numCoefficientPlanes, int inputVectorSize) {}
+                                     unsigned int numCoefficientPlanes, unsigned int inputVectorSize) {}
         /**
          * Each NDimensionalDisplayInterface is configured during contruction. This contructor allows the NDDI client
          * to reduce the size of the displayable area.
@@ -107,22 +107,22 @@ namespace nddi {
          * @param inputVectorSize Used to configure the size of the input vector. It must be greater than or equal to two.
          */
         NDimensionalDisplayInterface(vector<unsigned int> &frameVolumeDimensionalSizes,
-                                     int displayWidth, int displayHeight,
-                                     int numCoefficientPlanes, int inputVectorSize) {}
+                                     unsigned int displayWidth, unsigned int displayHeight,
+                                     unsigned int numCoefficientPlanes, unsigned int inputVectorSize) {}
 
         /**
          * Used to query the display width.
          *
          * @return The width of the display.
          */
-        virtual int DisplayWidth() = 0;
+        virtual unsigned int DisplayWidth() = 0;
 
         /**
          * Used to query the display height.
          *
          * @return The height of the display.
          */
-        virtual int DisplayHeight() = 0;
+        virtual unsigned int DisplayHeight() = 0;
 
         /**
          * Copies the provided pixel to the specified location.
@@ -233,7 +233,7 @@ namespace nddi {
          * @param end This three-element vector specifies the location in the coefficient planes where the last
          *            coefficient matrix will be copied to.
          */
-        virtual void FillCoefficient(int coefficient, int row, int col, vector<unsigned int> &start, vector<unsigned int> &end) = 0;
+        virtual void FillCoefficient(int coefficient, unsigned int row, unsigned int col, vector<unsigned int> &start, vector<unsigned int> &end) = 0;
 
         /**
          * For each coefficient, positions, and start; copies the coefficient to the position

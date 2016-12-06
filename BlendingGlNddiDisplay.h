@@ -22,11 +22,11 @@ class BlendingGlNddiDisplay : public GlNddiDisplay, public NDimensionalDisplayIn
 
 public:
     BlendingGlNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
-                          int numCoefficientPlanes, int inputVectorSize,
+                          unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
                           bool headless = false);
     BlendingGlNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
-                          int displayWidth, int displayHeight,
-                          int numCoefficientPlanes, int inputVectorSize,
+                          unsigned int displayWidth, unsigned int displayHeight,
+                          unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
                           bool headless = false);
     ~BlendingGlNddiDisplay();
 

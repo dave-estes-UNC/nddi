@@ -21,7 +21,7 @@ BaseNddiDisplay::BaseNddiDisplay() :
 {}
 
 BaseNddiDisplay::BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
-                                 int numCoefficientPlanes, int inputVectorSize,
+                                 unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
                                  bool headless) :
         displayWidth_(0),
         displayHeight_(0),
@@ -36,8 +36,8 @@ BaseNddiDisplay::BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSiz
 {}
 
 BaseNddiDisplay::BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
-                                 int displayWidth, int displayHeight,
-                                 int numCoefficientPlanes, int inputVectorSize,
+                                 unsigned int displayWidth, unsigned int displayHeight,
+                                 unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
                                  bool headless) :
         displayWidth_(displayWidth),
         displayHeight_(displayHeight),
@@ -53,15 +53,15 @@ BaseNddiDisplay::BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSiz
 
 BaseNddiDisplay::~BaseNddiDisplay() {}
 
-int BaseNddiDisplay::DisplayWidth() {
+unsigned int BaseNddiDisplay::DisplayWidth() {
     return displayWidth_;
 }
 
-int BaseNddiDisplay::DisplayHeight() {
+unsigned int BaseNddiDisplay::DisplayHeight() {
     return displayHeight_;
 }
 
-int BaseNddiDisplay::NumCoefficientPlanes() {
+unsigned int BaseNddiDisplay::NumCoefficientPlanes() {
     return numPlanes_;
 }
 
@@ -260,7 +260,7 @@ void BaseNddiDisplay::FillCoefficientMatrix(vector< vector<int> > &coefficientMa
 }
 
 void BaseNddiDisplay::FillCoefficient(int coefficient,
-                                      int row, int col,
+                                      unsigned int row, unsigned int col,
                                       vector<unsigned int> &start,
                                       vector<unsigned int> &end) {
     assert(row >= 0 && row < CM_HEIGHT);

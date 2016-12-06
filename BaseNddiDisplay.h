@@ -100,16 +100,16 @@ namespace nddi {
     public:
         BaseNddiDisplay();
         BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
-                        int numCoefficientPlanes, int inputVectorSize,
+                        unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
                         bool headless = false);
         BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
-                        int displayWidth, int displayHeight,
-                        int numCoefficientPlanes, int inputVectorSize,
+                        unsigned int displayWidth, unsigned int displayHeight,
+                        unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
                         bool headless = false);
         ~BaseNddiDisplay();
-        int DisplayWidth();
-        int DisplayHeight();
-        int NumCoefficientPlanes();
+        unsigned int DisplayWidth();
+        unsigned int DisplayHeight();
+        unsigned int NumCoefficientPlanes();
         void PutPixel(Pixel p, vector<unsigned int> &location);
         void CopyPixelStrip(Pixel* p, vector<unsigned int> &start, vector<unsigned int> &end);
         void CopyPixels(Pixel* p, vector<unsigned int> &start, vector<unsigned int> &end);
@@ -119,7 +119,7 @@ namespace nddi {
         void UpdateInputVector(vector<int> &input);
         void PutCoefficientMatrix(vector< vector<int> > &coefficientMatrix, vector<unsigned int> &location);
         void FillCoefficientMatrix(vector< vector<int> > &coefficientMatrix, vector<unsigned int> &start, vector<unsigned int> &end);
-        void FillCoefficient(int coefficient, int row, int col, vector<unsigned int> &start, vector<unsigned int> &end);
+        void FillCoefficient(int coefficient, unsigned int row, unsigned int col, vector<unsigned int> &start, vector<unsigned int> &end);
         void FillCoefficientTiles(vector<int> &coefficients, vector<vector<unsigned int> > &positions, vector<vector<unsigned int> > &starts, vector<unsigned int> &size);
         void FillScaler(Scaler scaler, vector<unsigned int> &start, vector<unsigned int> &end);
         void FillScalerTiles(vector<uint64_t> &scalers, vector<vector<unsigned int> > &starts, vector<unsigned int> &size);

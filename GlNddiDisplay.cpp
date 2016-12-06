@@ -42,15 +42,15 @@ inline uint8_t TRUNCATE_BYTE(int32_t i) {
 // public
 
 GlNddiDisplay::GlNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
-                             int numCoefficientPlanes, int inputVectorSize,
+                             unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
                              bool headless) {
     texture_ = 0;
     GlNddiDisplay(frameVolumeDimensionalSizes, 320, 240, numCoefficientPlanes, inputVectorSize);
 }
 
 GlNddiDisplay::GlNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
-                             int displayWidth, int displayHeight,
-                             int numCoefficientPlanes, int inputVectorSize,
+                             unsigned int displayWidth, unsigned int displayHeight,
+                             unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
                              bool headless) {
 
     numPlanes_ = numCoefficientPlanes;

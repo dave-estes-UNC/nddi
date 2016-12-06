@@ -248,8 +248,8 @@ void ClNddiDisplay::InitializeCl() {
                                       maxCommandPacketSize_, NULL, NULL);
     clFrameVolume_->setCommandPacket(clCommandPacket_, maxCommandPacketSize_);
 
-    cl_uint cm_dims[2] = { CM_WIDTH, CM_HEIGHT };
-    cl_uint display_dims[3] = { displayWidth_, displayHeight_, numPlanes_ };
+    cl_uint cm_dims[2] = { (cl_uint)CM_WIDTH, (cl_uint)CM_HEIGHT };
+    cl_uint display_dims[3] = { (cl_uint)displayWidth_, (cl_uint)displayHeight_, (cl_uint)numPlanes_ };
 
     // Set the arguments to our computePixel kernel
     err  = clSetKernelArg(clKernelComputePixel_, 0, sizeof(cl_mem), &inputVectorBuffer);
@@ -422,7 +422,7 @@ void ClNddiDisplay::Render() {
 
     if (!quiet_) {
         gettimeofday(&endTime, NULL);
-        printf("Render Statistics:\n  Size: %dx%d - FPS: %f\n",
+        printf("Render Statistics:\n  Size: %zdx%zd - FPS: %f\n",
                displayWidth_,
                displayHeight_,
                1.0f / ((double)(endTime.tv_sec * 1000000

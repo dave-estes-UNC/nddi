@@ -129,7 +129,7 @@ void GlNddiDisplay::Render() {
 
     if (!quiet_) {
         gettimeofday(&endTime, NULL);
-        printf("Render Statistics:\n  Size: %dx%d - FPS: %f\n",
+        printf("Render Statistics:\n  Size: %zdx%zd - FPS: %f\n",
                 displayWidth_,
                 displayHeight_,
                 1.0f / ((double)(endTime.tv_sec * 1000000

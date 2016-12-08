@@ -125,6 +125,13 @@ namespace nddi {
         virtual unsigned int DisplayHeight() = 0;
 
         /**
+         * Used to query the number of coefficient planes.
+         *
+         * @ return The number of coefficient planes.
+         */
+        virtual unsigned int NumCoefficientPlanes() = 0;
+
+        /**
          * Copies the provided pixel to the specified location.
          *
          * @param p The pixel value to be copied.

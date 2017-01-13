@@ -83,6 +83,9 @@ namespace nddi {
 
         Coeff GetCoefficient(vector<unsigned int> &location, int row, int col) {
             assert(location.size() == 3);
+            assert(location[0] < width_);
+            assert(location[1] < height_);
+            assert(location[2] < numPlanes_);
             assert(row < matrixWidth_);
             assert(col < matrixHeight_);
 
@@ -95,6 +98,9 @@ namespace nddi {
         void PutCoefficientMatrix(vector< vector<int> > &coefficientMatrix, vector<unsigned int> &location) {
 
             assert(location.size() == 3);
+            assert(location[0] < width_);
+            assert(location[1] < height_);
+            assert(location[2] < numPlanes_);
             assert(coefficientMatrix.size() == matrixWidth_);
             assert(coefficientMatrix[0].size() == matrixHeight_);
 
@@ -128,7 +134,13 @@ namespace nddi {
                                    vector<unsigned int> &end) {
 
             assert(start.size() == 3);
+            assert(start[0] < width_);
+            assert(start[1] < height_);
+            assert(start[2] < numPlanes_);
             assert(end.size() == 3);
+            assert(end[0] < width_);
+            assert(end[1] < height_);
+            assert(end[2] < numPlanes_);
             assert(coefficientMatrix.size() == matrixWidth_);
             assert(coefficientMatrix[0].size() == matrixHeight_);
 
@@ -184,7 +196,13 @@ namespace nddi {
                              vector<unsigned int> &end) {
 
             assert(start.size() == 3);
+            assert(start[0] < width_);
+            assert(start[1] < height_);
+            assert(start[2] < numPlanes_);
             assert(end.size() == 3);
+            assert(end[0] < width_);
+            assert(end[1] < height_);
+            assert(end[2] < numPlanes_);
             assert(col < matrixWidth_);
             assert(row < matrixHeight_);
 #ifdef NARROW_DATA_STORES
@@ -232,7 +250,13 @@ namespace nddi {
                         vector<unsigned int> &end) {
 
             assert(start.size() == 3);
+            assert(start[0] < width_);
+            assert(start[1] < height_);
+            assert(start[2] < numPlanes_);
             assert(end.size() == 3);
+            assert(end[0] < width_);
+            assert(end[1] < height_);
+            assert(end[2] < numPlanes_);
 
             vector<unsigned int> position = start;
             bool fillFinished = false;

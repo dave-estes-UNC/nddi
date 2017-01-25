@@ -188,7 +188,7 @@ namespace nddi {
             do {
                 // Set pixel in frame volume at position
                 if (!costModel_->isHeadless())
-                    setPixel(positionFrom, getPixel(positionTo));
+                    setPixel(positionTo, getPixel(positionFrom));
                 pixelsCopied++;
 
                 // Move to the next position

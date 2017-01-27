@@ -46,8 +46,9 @@ public:
      */
     void SimulateRender();
 
-private:
     void Render();
+
+private:
     nddi::Pixel ComputePixel(unsigned int x, unsigned int y);
 #ifndef NO_OMP
     nddi::Pixel ComputePixel(unsigned int x, unsigned int y, int* iv, nddi::Pixel* fv);

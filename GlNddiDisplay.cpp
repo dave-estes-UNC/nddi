@@ -41,20 +41,24 @@ inline uint8_t TRUNCATE_BYTE(int32_t i) {
 
 // public
 
-GlNddiDisplay::GlNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
+GlNddiDisplay::GlNddiDisplay(unsigned int frameVolumeDimensionality,
+                             unsigned int* frameVolumeDimensionalSizes,
                              unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
                              bool headless) {
     texture_ = 0;
-    GlNddiDisplay(frameVolumeDimensionalSizes, 320, 240, numCoefficientPlanes, inputVectorSize);
+    GlNddiDisplay(frameVolumeDimensionality, frameVolumeDimensionalSizes, 320, 240, numCoefficientPlanes, inputVectorSize);
 }
 
-GlNddiDisplay::GlNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
+GlNddiDisplay::GlNddiDisplay(unsigned int frameVolumeDimensionality,
+                             unsigned int* frameVolumeDimensionalSizes,
                              unsigned int displayWidth, unsigned int displayHeight,
                              unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
                              bool headless) {
 
     numPlanes_ = numCoefficientPlanes;
-    frameVolumeDimensionalSizes_ = frameVolumeDimensionalSizes;
+    frameVolumeDimensionality_ = frameVolumeDimensionality;
+    frameVolumeDimensionalSizes_ = (unsigned int*)malloc(sizeof(unsigned int) * frameVolumeDimensionality);
+    memcpy(frameVolumeDimensionalSizes_, frameVolumeDimensionalSizes, sizeof(unsigned int) * frameVolumeDimensionality);
     displayWidth_ = displayWidth;
     displayHeight_ = displayHeight;
     pixelSignMode_ = UNSIGNED_MODE;
@@ -66,8 +70,8 @@ GlNddiDisplay::GlNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
     // Setup Input Vector
     inputVector_ = new InputVector(costModel, inputVectorSize);
 
-    // Setup framevolume and initialize to black
-    frameVolume_ = new FrameVolume(costModel, frameVolumeDimensionalSizes);
+    // Setup frame volume and initialize to black
+    frameVolume_ = new FrameVolume(costModel, frameVolumeDimensionality, frameVolumeDimensionalSizes);
 
     // Setup coefficient plane with zeroed coefficient matrices
     coefficientPlanes_ = new CoefficientPlanes(costModel, displayWidth_, displayHeight_, numCoefficientPlanes, CM_WIDTH, CM_HEIGHT);
@@ -86,6 +90,7 @@ GlNddiDisplay::GlNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
 // TODO(CDE): Why is the destructor for GlNddiDisplay being called when we're using a ClNddiDisplay?
 GlNddiDisplay::~GlNddiDisplay() {
 
+    free((void*)frameVolumeDimensionalSizes_);
     delete(inputVector_);
     delete(frameVolume_);
     delete(coefficientPlanes_);

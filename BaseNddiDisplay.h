@@ -7,7 +7,7 @@
 #include "FrameVolume.h"
 
 #define CM_WIDTH   (inputVector_->getSize())
-#define CM_HEIGHT  (frameVolumeDimensionalSizes_.size())
+#define CM_HEIGHT  (frameVolumeDimensionality_)
 #define CM_SIZE    (CM_WIDTH * CM_HEIGHT)
 #define CM_STORAGE (sizeof(int) * CM_SIZE)
 
@@ -49,9 +49,14 @@ namespace nddi {
         InputVector * inputVector_;
 
         /**
+         * Holds the dimensionality of the frame volume.
+         */
+        unsigned int frameVolumeDimensionality_;
+
+        /**
          * Holds the sizes of each dimension of the Frame Volume.
          */
-        vector<unsigned int> frameVolumeDimensionalSizes_;
+        unsigned int* frameVolumeDimensionalSizes_;
 
         /**
          * The frameVolume_ is physcially a flat buffer of Pixels, but it logically managed based on the configured
@@ -99,10 +104,12 @@ namespace nddi {
 
     public:
         BaseNddiDisplay();
-        BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
+        BaseNddiDisplay(unsigned int frameVolumeDimensionality,
+                        unsigned int* frameVolumeDimensionalSizes,
                         unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
                         bool headless = false);
-        BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
+        BaseNddiDisplay(unsigned int frameVolumeDimensionality,
+                        unsigned int* frameVolumeDimensionalSizes,
                         unsigned int displayWidth, unsigned int displayHeight,
                         unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
                         bool headless = false);

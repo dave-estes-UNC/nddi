@@ -21,19 +21,23 @@ namespace nddi {
     class FrameVolume {
 
     protected:
-        CostModel             * costModel_;
-        vector<unsigned int>    dimensionalSizes_;
-        size_t                  size_;
-        Pixel                 * pixels_;
+        CostModel     * costModel_;
+        unsigned int    dimensionality_;
+        unsigned int  * dimensionalSizes_;
+        size_t          size_;
+        Pixel         * pixels_;
 
     public:
 
         FrameVolume(CostModel* costModel,
-                    vector<unsigned int> &frameVolumeDimensionalSizes)
+                    unsigned int frameVolumeDimensionality,
+                    unsigned int* frameVolumeDimensionalSizes)
         : costModel_(costModel), size_(1), pixels_(NULL) {
 
-            dimensionalSizes_ = frameVolumeDimensionalSizes;
-            for (int i = 0; i < dimensionalSizes_.size(); i++) {
+            dimensionality_ = frameVolumeDimensionality;
+            dimensionalSizes_ = (unsigned int*)malloc(sizeof(unsigned int) * frameVolumeDimensionality);
+            for (int i = 0; i < dimensionality_; i++) {
+                dimensionalSizes_[i] = frameVolumeDimensionalSizes[i];
                 size_ *= dimensionalSizes_[i];
             }
             if (!costModel_->isHeadless()) {
@@ -44,11 +48,11 @@ namespace nddi {
 
         ~FrameVolume() {
 
-            if (!dimensionalSizes_.empty()) {
-                dimensionalSizes_.clear();
+            if (dimensionalSizes_) {
+                free((void*)dimensionalSizes_);
             }
             if (pixels_) {
-                free(pixels_);
+                free((void*)pixels_);
             }
         }
 
@@ -75,7 +79,7 @@ namespace nddi {
             bool dimensionFound = false;
 
             // Find the dimension to copy along
-            for (int i = 0; !dimensionFound && (i < dimensionalSizes_.size()); i++) {
+            for (int i = 0; !dimensionFound && (i < dimensionality_); i++) {
                 if (start[i] != end[i]) {
                     dimensionToCopyAlong = i;
                     dimensionFound = true;
@@ -121,7 +125,7 @@ namespace nddi {
                         || (position[fvDim] > end[fvDim]) ) {
                         overflow = true;
                         position[fvDim] = start[fvDim];
-                        if (++fvDim >= dimensionalSizes_.size())
+                        if (++fvDim >= dimensionality_)
                             copyFinished = true;
                     }
                 } while (overflow && !copyFinished);
@@ -160,7 +164,7 @@ namespace nddi {
                         || (position[fvDim] > end[fvDim]) ) {
                         overflow = true;
                         position[fvDim] = start[fvDim];
-                        if (++fvDim >= dimensionalSizes_.size())
+                        if (++fvDim >= dimensionality_)
                             fillFinished = true;
                     }
                 } while (overflow && !fillFinished);
@@ -203,7 +207,7 @@ namespace nddi {
                         overflow = true;
                         positionFrom[fvDim] = start[fvDim];
                         positionTo[fvDim] = dest[fvDim];
-                        if (++fvDim >= dimensionalSizes_.size())
+                        if (++fvDim >= dimensionality_)
                             copyFinished = true;
                     }
                 } while (overflow && !copyFinished);
@@ -225,7 +229,7 @@ namespace nddi {
             unsigned int  offset = 0;
             unsigned int  multiplier = 1;
 
-            assert(dimensionalSizes_.size() == location.size());
+            assert(dimensionality_ == location.size());
             assert(!costModel_->isHeadless());
 
             for (int i = 0; i < location.size(); i++) {
@@ -246,7 +250,7 @@ namespace nddi {
             unsigned int  offset = 0;
             unsigned int  multiplier = 1;
 
-            assert(dimensionalSizes_.size() == location.size());
+            assert(dimensionality_ == location.size());
             assert(!costModel_->isHeadless());
 
             for (int i = 0; i < location.size(); i++) {

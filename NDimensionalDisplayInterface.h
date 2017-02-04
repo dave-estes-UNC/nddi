@@ -86,27 +86,31 @@ namespace nddi {
         /**
          * Each NDimensionalDisplayInterface is configured during construction.
          *
-         * @param frameVolumeDimensionalSizes This vector is used to configure the frame volume.
+         * @param frameVolumeDimensionality  Sets the dimensionality of the frame volume.
+         * @param frameVolumeDimensionalSizes This array of size frameVolumeDimensionality is used to configure the frame volume.
          *                                    Each element in the vector represents a dimension and that element's
          *                                    value represents the size of that dimension. e.g. a simple 4x4 2D
-         *                                    frame volume will be configured with a two-element vector with 4 and 4 in it.
+         *                                    frame volume will be configured with a two-element array with 4 and 4 in it.
+         * @param numCoefficientPlanes Sets the number of coefficient planes.
          * @param inputVectorSize Used to configure the size of the input vector. It must be greater than or equal to two.
          */
-        NDimensionalDisplayInterface(vector<unsigned int> &frameVolumeDimensionalSizes,
+        NDimensionalDisplayInterface(unsigned int frameVolumeDimensionality, unsigned int* frameVolumeDimensionalSizes,
                                      unsigned int numCoefficientPlanes, unsigned int inputVectorSize) {}
         /**
          * Each NDimensionalDisplayInterface is configured during contruction. This contructor allows the NDDI client
          * to reduce the size of the displayable area.
          *
-         * @param frameVolumeDimensionalSizes This vector is used to configure the frame volume.
+         * @param frameVolumeDimensionality Sets the dimensionality of the frame volume.
+         * @param frameVolumeDimensionalSizes This array of size frameVolumeDimensionality is used to configure the frame volume.
          *                                    Each element in the vector represents a dimension and that element's
          *                                    value represents the size of that dimension. e.g. a simple 4x4 2D
-         *                                    frame volume will be configured with a two-element vector with 4 and 4 in it.
+         *                                    frame volume will be configured with a two-element array with 4 and 4 in it.
          * @param displayWidth Used to configure the width of the display if it is less than the display device.
          * @param displayHeight Used to configure the width of the display if it is less than the display device.
+         * @param numCoefficientPlanes Sets the number of coefficient planes.
          * @param inputVectorSize Used to configure the size of the input vector. It must be greater than or equal to two.
          */
-        NDimensionalDisplayInterface(vector<unsigned int> &frameVolumeDimensionalSizes,
+        NDimensionalDisplayInterface(unsigned int frameVolumeDimensionality, unsigned int* frameVolumeDimensionalSizes,
                                      unsigned int displayWidth, unsigned int displayHeight,
                                      unsigned int numCoefficientPlanes, unsigned int inputVectorSize) {}
 

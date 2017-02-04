@@ -213,9 +213,7 @@ void BaseNddiDisplay::CopyFrameVolume(vector<unsigned int> &start, vector<unsign
 #endif
 }
 
-void BaseNddiDisplay::UpdateInputVector(vector<int> &input) {
-
-    assert(input.size() == inputVector_->getSize() - 2);
+void BaseNddiDisplay::UpdateInputVector(int* input) {
 
     // Register transmission cost first
     costModel->registerTransmissionCharge(CALC_BYTES_FOR_IV_UPDATE(), // Input Vector

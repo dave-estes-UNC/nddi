@@ -44,12 +44,15 @@ BlendingGlNddiDisplay::BlendingGlNddiDisplay(unsigned int frameVolumeDimensional
 
 // Implements the frame volume function directly using getPixel and setPixel since frame volume does not yet
 // support blending.
-void BlendingGlNddiDisplay::CopyFrameVolume(vector<unsigned int> &start, vector<unsigned int> &end, vector<unsigned int> &dest, bool blend) {
+void BlendingGlNddiDisplay::CopyFrameVolume(unsigned int* start, unsigned int* end, unsigned int* dest, bool blend) {
 
-    vector<unsigned int> positionFrom = start;
-    vector<unsigned int> positionTo = dest;
+    unsigned int positionFrom[frameVolumeDimensionality_];
+    unsigned int positionTo[frameVolumeDimensionality_];
     bool copyFinished = false;
     int pixelsCopied = 0;
+
+    memcpy(positionFrom, start, sizeof(unsigned int) * frameVolumeDimensionality_);
+    memcpy(positionTo, dest, sizeof(unsigned int) * frameVolumeDimensionality_);
 
     // Register transmission cost first
     costModel->registerTransmissionCharge(CALC_BYTES_FOR_FV_COORD_TUPLES(3), // Three Coordinate Tuples

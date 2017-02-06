@@ -44,13 +44,13 @@ public:
                   int numCoefficientPlanes, int inputVectorSize,
                   bool headless = false);
     ~ClNddiDisplay();
-    void PutPixel(Pixel p, vector<unsigned int> &location);
-    void CopyPixelStrip(Pixel* p, vector<unsigned int> &start, vector<unsigned int> &end);
-    void CopyPixels(Pixel* p, vector<unsigned int> &start, vector<unsigned int> &end);
+    void PutPixel(Pixel p, unsigned int* location);
+    void CopyPixelStrip(Pixel* p, unsigned int* start, unsigned int* end);
+    void CopyPixels(Pixel* p, unsigned int* start, unsigned int* end);
     void CopyPixelTiles(vector<Pixel*> &p, vector<vector<unsigned int> > &starts, vector<unsigned int> &size);
-    void FillPixel(Pixel p, vector<unsigned int> &start, vector<unsigned int> &end);
-    void CopyFrameVolume(vector<unsigned int> &start, vector<unsigned int> &end, vector<unsigned int> &dest);
-    void UpdateInputVector(vector<int> &input);
+    void FillPixel(Pixel p, unsigned int* start, unsigned int* end);
+    void CopyFrameVolume(unsigned int* start, unsigned int* end, unsigned int* dest);
+    void UpdateInputVector(int* input);
     void PutCoefficientMatrix(vector< vector<int> > &coefficientMatrix, vector<unsigned int> &location);
     void FillCoefficientMatrix(vector< vector<int> > &coefficientMatrix, vector<unsigned int> &start, vector<unsigned int> &end);
     void FillCoefficient(int coefficient, int row, int col, vector<unsigned int> &start, vector<unsigned int> &end);

@@ -46,12 +46,10 @@ public:
             clReleaseMemObject(clBuffer_);
     }
 
-    void UpdateInputVector(std::vector<int> input) {
-
-        assert(input.size() + 2 == size_);
+    void UpdateInputVector(int* input) {
 
         // Update the underlying Input Vector and cost model
-        for (int i = 0; (i < input.size()) && ((i + 2) < size_); i++) {
+        for (int i = 0; (i + 2) < size_; i++) {
             setValue(i+2, input[i]);
         }
 

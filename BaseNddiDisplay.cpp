@@ -73,7 +73,7 @@ unsigned int BaseNddiDisplay::NumCoefficientPlanes() {
     return numPlanes_;
 }
 
-void BaseNddiDisplay::PutPixel(Pixel p, vector<unsigned int> &location) {
+void BaseNddiDisplay::PutPixel(Pixel p, unsigned int* location) {
 
     // Register transmission cost first
     costModel->registerTransmissionCharge(CALC_BYTES_FOR_PIXELS(1) +         // One Pixel
@@ -90,7 +90,7 @@ void BaseNddiDisplay::PutPixel(Pixel p, vector<unsigned int> &location) {
 #endif
 }
 
-void BaseNddiDisplay::CopyPixelStrip(Pixel* p, vector<unsigned int> &start, vector<unsigned int> &end) {
+void BaseNddiDisplay::CopyPixelStrip(Pixel* p, unsigned int* start, unsigned int* end) {
 
     int dimensionToCopyAlong;
     bool dimensionFound = false;
@@ -119,11 +119,11 @@ void BaseNddiDisplay::CopyPixelStrip(Pixel* p, vector<unsigned int> &start, vect
 #endif
 }
 
-void BaseNddiDisplay::CopyPixels(Pixel* p, vector<unsigned int> &start, vector<unsigned int> &end) {
+void BaseNddiDisplay::CopyPixels(Pixel* p, unsigned int* start, unsigned int* end) {
 
     // Register transmission cost first
     int pixelsToCopy = 1;
-    for (int i = 0; i < start.size(); i++) {
+    for (int i = 0; i < frameVolumeDimensionality_; i++) {
         pixelsToCopy *= end[i] - start[i] + 1;
     }
     costModel->registerTransmissionCharge(CALC_BYTES_FOR_PIXELS(pixelsToCopy) +    // Range of pixels
@@ -161,16 +161,17 @@ void BaseNddiDisplay::CopyPixelTiles(vector<Pixel*> &p, vector<vector<unsigned i
                                           0);
 
     // Copy pixels
-    vector<unsigned int> end;
-    end.resize(size.size());
+    unsigned int start[frameVolumeDimensionality_];
+    unsigned int end[frameVolumeDimensionality_];
     for (int i = 0; i < starts.size(); i++) {
-        assert(starts[i].size() == frameVolumeDimensionality_);
-        end[0] = starts[i][0] + size[0]- 1; if (end[0] >= frameVolumeDimensionalSizes_[0]) end[0] = frameVolumeDimensionalSizes_[0] - 1;
-        end[1] = starts[i][1] + size[1] - 1; if (end[1] >= frameVolumeDimensionalSizes_[1]) end[1] = frameVolumeDimensionalSizes_[1] - 1;
+        start[0] = starts[i][0];
+        start[1] = starts[i][1];
+        end[0] = start[0] + size[0]- 1; if (end[0] >= frameVolumeDimensionalSizes_[0]) end[0] = frameVolumeDimensionalSizes_[0] - 1;
+        end[1] = start[1] + size[1] - 1; if (end[1] >= frameVolumeDimensionalSizes_[1]) end[1] = frameVolumeDimensionalSizes_[1] - 1;
         for (int j = 2; j < frameVolumeDimensionality_; j++) {
-            end[j] = starts[i][j];
+            start[j] = end[j] = starts[i][j];
         }
-        frameVolume_->CopyPixels(p[i], starts[i], end);
+        frameVolume_->CopyPixels(p[i], start, end);
     }
 
 #ifdef SUPRESS_EXCESS_RENDERING
@@ -180,7 +181,7 @@ void BaseNddiDisplay::CopyPixelTiles(vector<Pixel*> &p, vector<vector<unsigned i
 #endif
 }
 
-void BaseNddiDisplay::FillPixel(Pixel p, vector<unsigned int> &start, vector<unsigned int> &end) {
+void BaseNddiDisplay::FillPixel(Pixel p, unsigned int* start, unsigned int* end) {
 
     // Register transmission cost first
     costModel->registerTransmissionCharge(CALC_BYTES_FOR_PIXELS(1) +         // One Pixel
@@ -197,7 +198,7 @@ void BaseNddiDisplay::FillPixel(Pixel p, vector<unsigned int> &start, vector<uns
 #endif
 }
 
-void BaseNddiDisplay::CopyFrameVolume(vector<unsigned int> &start, vector<unsigned int> &end, vector<unsigned int> &dest) {
+void BaseNddiDisplay::CopyFrameVolume(unsigned int* start, unsigned int* end, unsigned int* dest) {
 
     // Register transmission cost first
     costModel->registerTransmissionCharge(CALC_BYTES_FOR_FV_COORD_TUPLES(3), // Three Coordinate Tuples

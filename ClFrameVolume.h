@@ -29,13 +29,11 @@ private:
     unsigned char *   packet_;
     size_t            maxPacketSize_;
 
-    inline unsigned int calcOffset(vector<unsigned int> &location) {
+    inline unsigned int calcOffset(unsigned int* location) {
         unsigned int  offset = 0;
         unsigned int  multiplier = 1;
 
-        assert(dimensionality_ == location.size());
-
-        for (int i = 0; i < location.size(); i++) {
+        for (int i = 0; i < dimensionality_; i++) {
             assert(location[i] < dimensionalSizes_[i]);
 
             offset += location[i] * multiplier;
@@ -89,7 +87,7 @@ public:
             clReleaseMemObject(clBuffer_);
 }
 
-    void PutPixel(Pixel p, vector<unsigned int> &location) {
+    void PutPixel(Pixel p, unsigned int* location) {
 
         unsigned int offset = calcOffset(location);
 
@@ -107,7 +105,7 @@ public:
     }
 
     // TODO(CDE): move to buffer writes in 3 dimensions. Consider not even supporting strips in any other dimensions
-    void CopyPixelStrip(Pixel* p, vector<unsigned int> &start, vector<unsigned int> &end) {
+    void CopyPixelStrip(Pixel* p, unsigned int* start, unsigned int* end) {
 
         int dimensionToCopyAlong;
         bool dimensionFound = false;
@@ -140,7 +138,8 @@ public:
 
         // Otherwise copy one pixel at a time
         } else {
-            vector<unsigned int> position = start;
+            unsigned int position[dimensionality_];
+            memcpy(position, start, sizeof(unsigned int) * dimensionality_);
             for (int j = 0; j <= stripLength; j++) {
 
                 // Calculate offset
@@ -165,14 +164,15 @@ public:
         costModel_->registerMemoryCharge(FRAME_VOLUME_COMPONENT, WRITE_ACCESS, NULL, 4 * stripLength, 0);
     }
 
-    void CopyPixels(Pixel* p, vector<unsigned int> &start, vector<unsigned int> &end) {
+    void CopyPixels(Pixel* p, unsigned int* start, unsigned int* end) {
 
-        vector<unsigned int>       position = start;
-        bool                       copyFinished = false;
-        int                        pixelsCopied = 0;
-        unsigned long              time = 0;
-        cl_event *                 pEvent = NULL;
+        unsigned int  position[dimensionality_];
+        bool          copyFinished = false;
+        int           pixelsCopied = 0;
+        unsigned long time = 0;
+        cl_event *    pEvent = NULL;
 
+        memcpy(position, start, sizeof(unsigned int) * dimensionality_);
 
         size_t buffer_origin[3] = { 0, 0, 0 };
         size_t host_origin[3] = { 0, 0, 0 };
@@ -180,7 +180,7 @@ public:
         size_t p_row_pitch = 0, p_slice_pitch = 0;
 
         // Setup enqueue parameters that are unchanged within the loop
-        switch (position.size()) {
+        switch (dimensionality_) {
             case 3:
                 buffer_origin[2] = position[2];
                 region[2] = end[2] - start[2] + 1;
@@ -390,13 +390,15 @@ public:
         costModel_->registerMemoryCharge(FRAME_VOLUME_COMPONENT, WRITE_ACCESS, NULL, 4 * pixelsCopied, 0);
     }
 
-    void FillPixel(Pixel p, vector<unsigned int> &start, vector<unsigned int> &end) {
+    void FillPixel(Pixel p, unsigned int* start, unsigned int* end) {
 
-        vector<unsigned int>       position = start;
-        bool                       fillFinished = false;
-        int                        pixelsFilled = 0;
-        unsigned long              time = 0;
-        cl_event *                 pEvent = NULL;
+        unsigned int  position[dimensionality_];
+        bool          fillFinished = false;
+        int           pixelsFilled = 0;
+        unsigned long time = 0;
+        cl_event *    pEvent = NULL;
+
+        memcpy(position, start, sizeof(unsigned int) * dimensionality_);
 
         // Move from start to end, filling in each location with the provided pixel
         do {
@@ -428,7 +430,7 @@ public:
         size_t p_row_pitch = 0, p_slice_pitch = 0;
 
         // Setup enqueue parameters that are unchanged within the loop
-        switch (position.size()) {
+        switch (dimensionality_) {
             case 3:
                 buffer_origin[2] = position[2];
                 region[2] = end[2] - start[2] + 1;
@@ -524,12 +526,14 @@ public:
     }
 
     // TODO(CDE): Implement for CL
-    void CopyFrameVolume(vector<unsigned int> &start, vector<unsigned int> &end, vector<unsigned int> &dest) {
+    void CopyFrameVolume(unsigned int* start, unsigned int* &end, unsigned int* dest) {
 
-        vector<unsigned int> positionFrom = start;
-        vector<unsigned int> positionTo = dest;
+        unsigned int positionFrom[dimensionality_];
+        unsigned int positionTo[dimensionality_];
         bool copyFinished = false;
         int pixelsCopied = 0;
+        memcpy(positionFrom, start, sizeof(unsigned int) * dimensionality_);
+        memcpy(positionTo, dest, sizeof(unsigned int) * dimensionality_);
 
         // Move from start to end, filling in each location with the provided pixel
         do {

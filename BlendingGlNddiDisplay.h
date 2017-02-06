@@ -33,7 +33,7 @@ public:
     ~BlendingGlNddiDisplay();
 
     // To satisfy the NDimensionalDisplayInterfaceExtended interface
-    void CopyFrameVolume(vector<unsigned int> &start, vector<unsigned int> &end, vector<unsigned int> &dest, bool blend);
+    void CopyFrameVolume(unsigned int* start, unsigned int* end, unsigned int* dest, bool blend);
 
 private:
     nddi::Pixel BlendPixel(nddi::Pixel pTo, nddi::Pixel pFrom);

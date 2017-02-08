@@ -88,7 +88,7 @@ namespace nddi {
          *
          * @param frameVolumeDimensionality  Sets the dimensionality of the frame volume.
          * @param frameVolumeDimensionalSizes This array of size frameVolumeDimensionality is used to configure the frame volume.
-         *                                    Each element in the vector represents a dimension and that element's
+         *                                    Each element in the array represents a dimension and that element's
          *                                    value represents the size of that dimension. e.g. a simple 4x4 2D
          *                                    frame volume will be configured with a two-element array with 4 and 4 in it.
          * @param numCoefficientPlanes Sets the number of coefficient planes.
@@ -102,7 +102,7 @@ namespace nddi {
          *
          * @param frameVolumeDimensionality Sets the dimensionality of the frame volume.
          * @param frameVolumeDimensionalSizes This array of size frameVolumeDimensionality is used to configure the frame volume.
-         *                                    Each element in the vector represents a dimension and that element's
+         *                                    Each element in the array represents a dimension and that element's
          *                                    value represents the size of that dimension. e.g. a simple 4x4 2D
          *                                    frame volume will be configured with a two-element array with 4 and 4 in it.
          * @param displayWidth Used to configure the width of the display if it is less than the display device.
@@ -171,11 +171,12 @@ namespace nddi {
          * Copies the array of pixels into the designated tile regions of the frame volume. The data must be
          * arranged in the array with strides for each dimension of the area. Only 2D tiles are supported.
          *
-         * @param p The pointer to the pixel values to be copied.
-         * @param starts Vector holding series of first pixel for each destination tile in the frame volume.
+         * @param p Array of pointers to the pixel value tiles to be copied.
+         * @param starts Array holding series of starts (tuple) for each destination tile in the frame volume.
          * @param size The size of each tile (w, h).
+         * @param count The number of tiles being copied.
          */
-        virtual void CopyPixelTiles(vector<Pixel*> &p, vector<vector<unsigned int> > &starts, vector<unsigned int> &size) = 0;
+        virtual void CopyPixelTiles(Pixel** p, unsigned int* starts, unsigned int* size, size_t count) = 0;
 
         /**
          * Fills the frame volume with the specified pixel. It can fill in multiple

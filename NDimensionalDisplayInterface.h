@@ -212,26 +212,28 @@ namespace nddi {
          * Used to copy the specified coefficientMatrix into the specified location of the coefficient
          * planes.
          *
-         * @param coefficientMatrix This two-dimensional vector holds the matrix to be copied.
+         * @param coefficientMatrix This two-dimensional array holds the matrix to be copied.
          *                          It's size must match the configuration of the coefficient matrices
          *                          exactly. Can use COFFICIENT_UNCHANGED for one or more elements.
-         * @param location This two-element vector specifies the location in the coefficient plane where the provided
+         *                          The array is strided along columns.
+         * @param location This three-element array specifies the location in the coefficient plane where the provided
          *                 coefficient matrix will be copied.
          */
-        virtual void PutCoefficientMatrix(vector< vector<int> > &coefficientMatrix, vector<unsigned int> &location) = 0;
+        virtual void PutCoefficientMatrix(int* coefficientMatrix, unsigned int* location) = 0;
 
         /**
          * Used to copy the specified coefficientMatrix into a range of locations in the coefficient planes.
          *
-         * @param coefficientMatrix This two-dimensional vector holds the matrix to be copied.
+         * @param coefficientMatrix This two-dimensional array holds the matrix to be copied.
          *                          It's size must match the configuration of the coefficient matrices
          *                          exactly. Can use COFFICIENT_UNCHANGED for one or more elements.
-         * @param start This three-element vector specifies the location in the coefficient planes where the first
+         *                          The array is strided along columns.
+         * @param start This three-element array specifies the location in the coefficient planes where the first
          *              coefficient matrix will be copied to.
-         * @param end This three-element vector specifies the location in the coefficient planes where the last
+         * @param end This three-element array specifies the location in the coefficient planes where the last
          *            coefficient matrix will be copied to.
          */
-        virtual void FillCoefficientMatrix(vector< vector<int> > &coefficientMatrix, vector<unsigned int> &start, vector<unsigned int> &end) = 0;
+        virtual void FillCoefficientMatrix(int* coefficientMatrix, unsigned int* start, unsigned int* end) = 0;
 
         /**
          * Used to copy the specified single coefficient value from a matrix into a range of locations in the coefficient planes.
@@ -240,12 +242,12 @@ namespace nddi {
          *                    matrices of the specified range.
          * @param row The row of the coefficient to be updated in the coefficient matrix.
          * @param col The column of the coefficient to be updated in the coefficient matrix.
-         * @param start This three-element vector specifies the location in the coefficient planes where the first
+         * @param start This three-element array specifies the location in the coefficient planes where the first
          *              coefficient matrix will be copied to.
-         * @param end This three-element vector specifies the location in the coefficient planes where the last
+         * @param end This three-element array specifies the location in the coefficient planes where the last
          *            coefficient matrix will be copied to.
          */
-        virtual void FillCoefficient(int coefficient, unsigned int row, unsigned int col, vector<unsigned int> &start, vector<unsigned int> &end) = 0;
+        virtual void FillCoefficient(int coefficient, unsigned int row, unsigned int col, unsigned int* start, unsigned int* end) = 0;
 
         /**
          * For each coefficient, positions, and start; copies the coefficient to the position
@@ -253,21 +255,22 @@ namespace nddi {
          *
          * @param coefficients The buffer of coefficients.
          * @param positions The position (row, col) to place the coefficient within the coefficient matrix.
-         * @param starts The location (x, y) of the start of the tile in the coefficient planes.
+         * @param starts The location (x, y, p) of the start of the tile in the coefficient planes.
          * @param size The size (w, h) of the tile.
+         * @param count The number of tiles being filled.
          */
-        virtual void FillCoefficientTiles(vector<int> &coefficients, vector<vector<unsigned int> > &positions, vector<vector<unsigned int> > &starts, vector<unsigned int> &size) = 0;
+        virtual void FillCoefficientTiles(int* coefficients, unsigned int* positions, unsigned int* starts, unsigned int* size, size_t count) = 0;
 
         /**
          * Used to copy the specified scaler to a range of locations in the coefficient planes.
          *
          * @param scaler This single scaler will be copied to each location in the range of coefficient planes.
-         * @param start This three-element vector specifies the start of the range in the coefficient planes
+         * @param start This three-element array specifies the start of the range in the coefficient planes
          *              where the scaler will be copied to.
-         * @param end This three-element vector specifies the end of the range in the coefficient planes where
+         * @param end This three-element array specifies the end of the range in the coefficient planes where
          *            the scalers will be copied to.
          */
-        virtual void FillScaler(Scaler scaler, vector<unsigned int> &start, vector<unsigned int> &end) = 0;
+        virtual void FillScaler(Scaler scaler, unsigned int* start, unsigned int* end) = 0;
 
         /**
          * Used to copy the specified scalers to a series of 2D ranges of locations (tiles) in the coefficient planes.
@@ -276,8 +279,9 @@ namespace nddi {
          * @param scalers Each scaler in this list will be filled to its own tile, which is a 2D range of coefficient matrices.
          * @param starts The location (x, y, z) of the start of the tile in the coefficient planes.
          * @param size The size (w, h) of the tile.
+         * @param count The number of tiles being filled.
          */
-        virtual void FillScalerTiles(vector<uint64_t> &scalers, vector<vector<unsigned int> > &starts, vector<unsigned int> &size) = 0;
+        virtual void FillScalerTiles(Scaler* scalers, unsigned int* starts, unsigned int* size, size_t count) = 0;
 
         /**
          * Used to copy the specified scalers to a stack of 2D ranges of locations (tiles) in the coefficient planes.
@@ -289,8 +293,9 @@ namespace nddi {
          * @param scalers Each scaler in this list will be filled to its own tile (2D range of coefficient matrices) in the stack.
          * @param start The location (x, y) of the start of the tile stack in the coefficient planes.
          * @param size The size (w, h) of the tile.
+         * @param count The number of tiles being filled (i.e. the height of the stack).
          */
-        virtual void FillScalerTileStack(vector<uint64_t> &scalers, vector<unsigned int> &start, vector<unsigned int> &size) = 0;
+        virtual void FillScalerTileStack(Scaler* scalers, unsigned int* start, unsigned int* size, size_t count) = 0;
 
         /**
          * Allows the bytes of pixel values to be interpretted as signed values when scaling, accumulating, and clamping

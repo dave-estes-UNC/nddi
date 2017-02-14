@@ -563,8 +563,6 @@ void ClNddiDisplay::CopyFrameVolume(unsigned int* start, unsigned int* end, unsi
 
 void ClNddiDisplay::UpdateInputVector(int* input) {
 
-    assert(input.size() == inputVector_->getSize() - 2);
-
     // Register transmission cost first
     costModel->registerTransmissionCharge(CALC_BYTES_FOR_IV_UPDATE(), // Input Vector
                                           0);

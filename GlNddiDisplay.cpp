@@ -166,8 +166,7 @@ Pixel GlNddiDisplay::ComputePixel(unsigned int x, unsigned int y) {
 #endif
 
         // Compute the position vector for the proper pixel in the frame volume.
-        vector<unsigned int> location;
-        location.push_back(x); location.push_back(y); location.push_back(p);
+        unsigned int location[] = {x, y, p};
         unsigned int fvPosition[CM_HEIGHT];
         // Matrix multiply the input vector by the coefficient matrix
         for (int j = 0; j < CM_HEIGHT; j++) {

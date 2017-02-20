@@ -213,11 +213,11 @@ namespace nddi {
          * Used to update the input vector with the extra values in the input vector.
          *
          * @param input The values to use for the update. The length of this
-         *              array must equal the size of the actual input vector
+         *              vector must equal the size of the actual input vector
          *              minus two, since the first two values in the input
          *              vector cannot be changed.
          */
-        virtual void UpdateInputVector(int* input) = 0;
+        virtual void UpdateInputVector(vector<int> &input) = 0;
 
         /**
          * Used to copy the specified coefficientMatrix into the specified location of the coefficient

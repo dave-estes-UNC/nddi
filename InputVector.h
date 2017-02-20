@@ -30,12 +30,13 @@ namespace nddi {
 
         InputVector(CostModel* costModel,
                     unsigned int size)
-        : size_(size), values_(NULL), costModel_(costModel) {
+        : size_(0), values_(NULL), costModel_(costModel) {
 
             if (!costModel_->isHeadless()) {
                 values_ = (int *)malloc(sizeof(int) * size);
                 memset(values_, 0x00, sizeof(int) * size);
             }
+            size_ = size;
         }
 
         ~InputVector() {
@@ -50,18 +51,20 @@ namespace nddi {
             return size_;
         }
 
-        void UpdateInputVector(int* input) {
+        void UpdateInputVector(vector<int> &input) {
+
+            assert(input.size() + 2 == size_);
 
             if (!costModel_->isHeadless()) {
-                for (int i = 0; (i + 2) < size_; i++) {
+                for (int i = 0; (i < input.size()) && ((i + 2) < size_); i++) {
                     setValue(i+2, input[i]);
                 }
             } else {
                 costModel_->registerBulkMemoryCharge(INPUT_VECTOR_COMPONENT,
-                                                     size_,
+                                                     input.size(),
                                                      WRITE_ACCESS,
                                                      NULL,
-                                                     size_ * BYTES_PER_IV_VALUE,
+                                                     input.size() * BYTES_PER_IV_VALUE,
                                                      0);
             }
         }

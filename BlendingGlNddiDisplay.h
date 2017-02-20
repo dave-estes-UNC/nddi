@@ -21,12 +21,10 @@ using namespace std;
 class BlendingGlNddiDisplay : public GlNddiDisplay, public NDimensionalDisplayInterfaceExtended {
 
 public:
-    BlendingGlNddiDisplay(unsigned int frameVolumeDimensionality,
-                          unsigned int* frameVolumeDimensionalSizes,
+    BlendingGlNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                           unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
                           bool headless = false);
-    BlendingGlNddiDisplay(unsigned int frameVolumeDimensionality,
-                          unsigned int* frameVolumeDimensionalSizes,
+    BlendingGlNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                           unsigned int displayWidth, unsigned int displayHeight,
                           unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
                           bool headless = false);

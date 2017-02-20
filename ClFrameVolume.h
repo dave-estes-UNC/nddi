@@ -33,7 +33,7 @@ private:
         unsigned int  offset = 0;
         unsigned int  multiplier = 1;
 
-        assert(dimensionality_ == location.size());
+        assert(dimensionalSizes_.size() == location.size());
 
         for (int i = 0; i < location.size(); i++) {
             assert(location[i] < dimensionalSizes_[i]);
@@ -48,15 +48,14 @@ private:
 public:
 
     ClFrameVolume(CostModel* costModel,
-                  unsigned int frameVolumeDimensionality,
-                  unsigned int* frameVolumeDimensionalSizes)
-    : FrameVolume(costModel, frameVolumeDimensionality, frameVolumeDimensionalSizes),
+                vector<unsigned int> &frameVolumeDimensionalSizes)
+    : FrameVolume(costModel, frameVolumeDimensionalSizes),
       clBuffer_(NULL),
       clContext_(NULL), clQueue_(NULL),
       clCommandPacket_(NULL) {
 
         fv_row_pitch_ = fv_slice_pitch_ = 0;
-        switch (dimensionality_) {
+        switch (dimensionalSizes_.size()) {
             case 3:
                 fv_slice_pitch_ = dimensionalSizes_[1] * dimensionalSizes_[0] * sizeof(Pixel);
                 // No break
@@ -74,14 +73,14 @@ public:
 
     ~ClFrameVolume() {
 
-        if (dimensionalSizes_) {
-            free((void*)dimensionalSizes_);
+        if (!dimensionalSizes_.empty()) {
+            dimensionalSizes_.clear();
         }
         if (pixels_) {
-            free((void*)pixels_);
+            free(pixels_);
         }
         if (packet_) {
-            free((void*)packet_);
+            free(packet_);
         }
 
         // Release CL mem buffer
@@ -114,7 +113,7 @@ public:
         unsigned int stripLength;
 
         // Find the dimension to copy along
-        for (int i = 0; !dimensionFound && (i < dimensionality_); i++) {
+        for (int i = 0; !dimensionFound && (i < dimensionalSizes_.size()); i++) {
             if (start[i] != end[i]) {
                 dimensionToCopyAlong = i;
                 dimensionFound = true;
@@ -252,7 +251,7 @@ public:
             // Update pixel count
             pixelsCopied += region[0] * region[1] * region[2];
 
-            if (dimensionality_ <= 3) {
+            if (dimensionalSizes_.size() <= 3) {
                 copyFinished = true;
             } else {
                 // Move to the next position
@@ -265,7 +264,7 @@ public:
                         || (position[fvDim] > end[fvDim]) ) {
                         overflow = true;
                         position[fvDim] = start[fvDim];
-                        if (++fvDim >= dimensionality_)
+                        if (++fvDim >= dimensionalSizes_.size())
                             copyFinished = true;
                     }
                 } while (overflow && !copyFinished);
@@ -414,7 +413,7 @@ public:
                     || (position[fvDim] > end[fvDim]) ) {
                     overflow = true;
                     position[fvDim] = start[fvDim];
-                    if (++fvDim >= dimensionality_)
+                    if (++fvDim >= dimensionalSizes_.size())
                         fillFinished = true;
                 }
             } while (overflow && !fillFinished);
@@ -495,7 +494,7 @@ public:
                 cout << __FUNCTION__ << " - Still null?." << endl;
             }
 
-            if (dimensionality_ <= 3) {
+            if (dimensionalSizes_.size() <= 3) {
                 fillFinished = true;
             } else {
                 // Move to the next position
@@ -508,7 +507,7 @@ public:
                         || (position[fvDim] > end[fvDim]) ) {
                         overflow = true;
                         position[fvDim] = start[fvDim];
-                        if (++fvDim >= dimensionality_)
+                        if (++fvDim >= dimensionalSizes_.size())
                             fillFinished = true;
                     }
                 } while (overflow && !fillFinished);
@@ -549,7 +548,7 @@ public:
                     overflow = true;
                     positionFrom[fvDim] = start[fvDim];
                     positionTo[fvDim] = dest[fvDim];
-                    if (++fvDim >= dimensionality_)
+                    if (++fvDim >= dimensionalSizes_.size())
                         copyFinished = true;
                 }
             } while (overflow && !copyFinished);

@@ -20,8 +20,7 @@ using namespace nddi;
 
 // public
 
-ClNddiDisplay::ClNddiDisplay(unsigned int frameVolumeDimensionality,
-                             unsigned int* frameVolumeDimensionalSizes,
+ClNddiDisplay::ClNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                              int numCoefficientPlanes, int inputVectorSize,
                              bool headless)
 :   clFrameVolume_(NULL),
@@ -29,18 +28,16 @@ ClNddiDisplay::ClNddiDisplay(unsigned int frameVolumeDimensionality,
     clKernelFillCoefficient_(0),
     maxCommandPacketSize_(0)
 {
-    ClNddiDisplay(frameVolumeDimensionality, frameVolumeDimensionalSizes, 320, 240, numCoefficientPlanes, inputVectorSize);
+    ClNddiDisplay(frameVolumeDimensionalSizes, 320, 240, numCoefficientPlanes, inputVectorSize);
 }
 
-ClNddiDisplay::ClNddiDisplay(unsigned int frameVolumeDimensionality,
-                             unsigned int* frameVolumeDimensionalSizes,
+ClNddiDisplay::ClNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                              int displayWidth, int displayHeight,
                              int numCoefficientPlanes, int inputVectorSize,
                              bool headless)
 {
     numPlanes_ = numCoefficientPlanes;
-    frameVolumeDimensionality_ = frameVolumeDimensionality;
-    frameVolumeDimensionalSizes_ = (unsigned int*)malloc(sizeof(unsigned int) * frameVolumeDimensionality);
+    frameVolumeDimensionalSizes_ = frameVolumeDimensionalSizes;
     displayWidth_ = displayWidth;
     displayHeight_ = displayHeight;
     quiet_ = true;
@@ -59,7 +56,7 @@ ClNddiDisplay::ClNddiDisplay(unsigned int frameVolumeDimensionality,
     coefficientPlanes_ = (ClCoefficientPlanes*)clCoefficientPlane_;
 
     // Setup framevolume and initialize to black
-    clFrameVolume_ = new ClFrameVolume(costModel, frameVolumeDimensionality, frameVolumeDimensionalSizes);
+    clFrameVolume_ = new ClFrameVolume(costModel, frameVolumeDimensionalSizes);
     // TODO(CDE): NULL this out
     frameVolume_ = (FrameVolume*)clFrameVolume_;
 
@@ -85,7 +82,6 @@ ClNddiDisplay::ClNddiDisplay(unsigned int frameVolumeDimensionality,
 
 ClNddiDisplay::~ClNddiDisplay() {
 
-    free((void*)frameVolumeDimensionalSizes_);
     delete(clInputVector_);
     delete(clFrameVolume_);
     delete(clCoefficientPlane_);
@@ -460,7 +456,7 @@ void ClNddiDisplay::CopyPixelStrip(Pixel* p, vector<unsigned int> &start, vector
     bool dimensionFound = false;
 
     // Find the dimension to copy along
-    for (int i = 0; !dimensionFound && (i < frameVolumeDimensionality_); i++) {
+    for (int i = 0; !dimensionFound && (i < frameVolumeDimensionalSizes_.size()); i++) {
         if (start[i] != end[i]) {
             dimensionToCopyAlong = i;
             dimensionFound = true;
@@ -510,7 +506,7 @@ void ClNddiDisplay::CopyPixelTiles(vector<Pixel*> &p, vector<vector<unsigned int
 
     // Ensure parameter vectors' sizes match
     assert(starts.size() == tile_count);
-    assert(starts[0].size() == frameVolumeDimensionality_);
+    assert(starts[0].size() == frameVolumeDimensionalSizes_.size());
     assert(size.size() == 2);
 
     // Register transmission cost first

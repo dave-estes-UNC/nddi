@@ -19,12 +19,10 @@ class GlNddiDisplay : public nddi::BaseNddiDisplay {
 
 public:
     GlNddiDisplay() {}
-    GlNddiDisplay(unsigned int frameVolumeDimensionality,
-                  unsigned int* frameVolumeDimensionalSizes,
+    GlNddiDisplay(std::vector<unsigned int> &frameVolumeDimensionalSizes,
                   unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
                   bool headless = false);
-    GlNddiDisplay(unsigned int frameVolumeDimensionality,
-                  unsigned int* frameVolumeDimensionalSizes,
+    GlNddiDisplay(std::vector<unsigned int> &frameVolumeDimensionalSizes,
                   unsigned int displayWidth, unsigned int displayHeight,
                   unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
                   bool headless = false);

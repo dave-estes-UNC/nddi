@@ -20,46 +20,38 @@ BaseNddiDisplay::BaseNddiDisplay() :
         changed_(false)
 {}
 
-BaseNddiDisplay::BaseNddiDisplay(unsigned int frameVolumeDimensionality,
-                                 unsigned int* frameVolumeDimensionalSizes,
+BaseNddiDisplay::BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                                  unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                                 bool headless)
-: displayWidth_(0),
-  displayHeight_(0),
-  numPlanes_(numCoefficientPlanes),
-  inputVector_(NULL),
-  frameVolumeDimensionality_(frameVolumeDimensionality),
-  frameVolume_(NULL),
-  coefficientPlanes_(NULL),
-  costModel(NULL),
-  quiet_(false),
-  changed_(false) {
-    frameVolumeDimensionalSizes_ = (unsigned int*)malloc(sizeof(unsigned int) * frameVolumeDimensionality);
-    memcpy(frameVolumeDimensionalSizes_, frameVolumeDimensionalSizes, sizeof(unsigned int) * frameVolumeDimensionality);
-}
+                                 bool headless) :
+        displayWidth_(0),
+        displayHeight_(0),
+        numPlanes_(numCoefficientPlanes),
+        inputVector_(NULL),
+        frameVolumeDimensionalSizes_(frameVolumeDimensionalSizes),
+        frameVolume_(NULL),
+        coefficientPlanes_(NULL),
+        costModel(NULL),
+        quiet_(false),
+        changed_(false)
+{}
 
-BaseNddiDisplay::BaseNddiDisplay(unsigned int frameVolumeDimensionality,
-                                 unsigned int* frameVolumeDimensionalSizes,
+BaseNddiDisplay::BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                                  unsigned int displayWidth, unsigned int displayHeight,
                                  unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                                 bool headless)
-: displayWidth_(displayWidth),
-  displayHeight_(displayHeight),
-  numPlanes_(numCoefficientPlanes),
-  inputVector_(NULL),
-  frameVolumeDimensionality_(frameVolumeDimensionality),
-  frameVolume_(NULL),
-  coefficientPlanes_(NULL),
-  costModel(NULL),
-  quiet_(false),
-  changed_(false) {
-    frameVolumeDimensionalSizes_ = (unsigned int*)malloc(sizeof(unsigned int) * frameVolumeDimensionality);
-    memcpy(frameVolumeDimensionalSizes_, frameVolumeDimensionalSizes, sizeof(unsigned int) * frameVolumeDimensionality);
-}
+                                 bool headless) :
+        displayWidth_(displayWidth),
+        displayHeight_(displayHeight),
+        numPlanes_(numCoefficientPlanes),
+        inputVector_(NULL),
+        frameVolumeDimensionalSizes_(frameVolumeDimensionalSizes),
+        frameVolume_(NULL),
+        coefficientPlanes_(NULL),
+        costModel(NULL),
+        quiet_(false),
+        changed_(false)
+{}
 
-BaseNddiDisplay::~BaseNddiDisplay() {
-    free((void*)frameVolumeDimensionalSizes_);
-}
+BaseNddiDisplay::~BaseNddiDisplay() {}
 
 unsigned int BaseNddiDisplay::DisplayWidth() {
     return displayWidth_;
@@ -96,7 +88,7 @@ void BaseNddiDisplay::CopyPixelStrip(Pixel* p, vector<unsigned int> &start, vect
     bool dimensionFound = false;
 
     // Find the dimension to copy along
-    for (int i = 0; !dimensionFound && (i < frameVolumeDimensionality_); i++) {
+    for (int i = 0; !dimensionFound && (i < frameVolumeDimensionalSizes_.size()); i++) {
         if (start[i] != end[i]) {
             dimensionToCopyAlong = i;
             dimensionFound = true;
@@ -146,7 +138,7 @@ void BaseNddiDisplay::CopyPixelTiles(vector<Pixel*> &p, vector<vector<unsigned i
 
     // Ensure parameter vectors' sizes match
     assert(starts.size() == tile_count);
-    assert(starts[0].size() == frameVolumeDimensionality_);
+    assert(starts[0].size() == frameVolumeDimensionalSizes_.size());
     assert(size.size() == 2);
 
     // Register transmission cost first
@@ -164,10 +156,10 @@ void BaseNddiDisplay::CopyPixelTiles(vector<Pixel*> &p, vector<vector<unsigned i
     vector<unsigned int> end;
     end.resize(size.size());
     for (int i = 0; i < starts.size(); i++) {
-        assert(starts[i].size() == frameVolumeDimensionality_);
+        assert(starts[i].size() == frameVolumeDimensionalSizes_.size());
         end[0] = starts[i][0] + size[0]- 1; if (end[0] >= frameVolumeDimensionalSizes_[0]) end[0] = frameVolumeDimensionalSizes_[0] - 1;
         end[1] = starts[i][1] + size[1] - 1; if (end[1] >= frameVolumeDimensionalSizes_[1]) end[1] = frameVolumeDimensionalSizes_[1] - 1;
-        for (int j = 2; j < frameVolumeDimensionality_; j++) {
+        for (int j = 2; j < frameVolumeDimensionalSizes_.size(); j++) {
             end[j] = starts[i][j];
         }
         frameVolume_->CopyPixels(p[i], starts[i], end);

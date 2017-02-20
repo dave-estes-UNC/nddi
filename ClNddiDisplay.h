@@ -34,12 +34,10 @@ typedef struct {
 class ClNddiDisplay : public GlNddiDisplay, public NDimensionalDisplayInterfaceExtended {
 
 public:
-    ClNddiDisplay(unsigned int frameVolumeDimensionality,
-                  unsigned int* frameVolumeDimensionalSizes,
+    ClNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                   int numCoefficientPlanes, int inputVectorSize,
                   bool headless = false);
-    ClNddiDisplay(unsigned int frameVolumeDimensionality,
-                  unsigned int* frameVolumeDimensionalSizes,
+    ClNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                   int displayWidth, int displayHeight,
                   int numCoefficientPlanes, int inputVectorSize,
                   bool headless = false);

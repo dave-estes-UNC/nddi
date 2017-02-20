@@ -61,7 +61,7 @@ namespace nddi {
             return size_;
         }
 
-        void PutPixel(Pixel p, unsigned int* location) {
+        void PutPixel(Pixel p, vector<unsigned int> &location) {
             if (!costModel_->isHeadless()) {
                 setPixel(location, p);
             } else {
@@ -74,7 +74,7 @@ namespace nddi {
             }
         }
 
-        void CopyPixelStrip(Pixel* p, unsigned int* start, unsigned int* end) {
+        void CopyPixelStrip(Pixel* p, vector<unsigned int> &start, vector<unsigned int> &end) {
             int dimensionToCopyAlong;
             bool dimensionFound = false;
 
@@ -87,8 +87,7 @@ namespace nddi {
             }
 
             if (!costModel_->isHeadless()) {
-                unsigned int position[dimensionality_];
-                memcpy(position, start, sizeof(unsigned int) * dimensionality_);
+                vector<unsigned int> position = start;
                 for (int j = 0; j <= end[dimensionToCopyAlong] - start[dimensionToCopyAlong]; j++) {
                     setPixel(position, p[j]);
                     position[dimensionToCopyAlong]++;
@@ -103,13 +102,11 @@ namespace nddi {
             }
         }
 
-        void CopyPixels(Pixel* p, unsigned int* start, unsigned int* end) {
+        void CopyPixels(Pixel* p, vector<unsigned int> &start, vector<unsigned int> &end) {
 
-            unsigned int position[dimensionality_];
+            vector<unsigned int> position = start;
             bool copyFinished = false;
             int pixelsCopied = 0;
-
-            memcpy(position, start, sizeof(unsigned int) * dimensionality_);
 
             // Move from start to end, filling in each location with the provided pixel
             do {
@@ -144,13 +141,11 @@ namespace nddi {
                                                      0);
         }
 
-        void FillPixel(Pixel p, unsigned int* start, unsigned int* end) {
+        void FillPixel(Pixel p, vector<unsigned int> &start, vector<unsigned int> &end) {
 
-            unsigned int position[dimensionality_];
+            vector<unsigned int> position = start;
             bool fillFinished = false;
             int pixelsFilled = 0;
-
-            memcpy(position, start, sizeof(unsigned int) * dimensionality_);
 
             // Move from start to end, filling in each location with the provided pixel
             do {
@@ -186,15 +181,12 @@ namespace nddi {
 
         }
 
-        void CopyFrameVolume(unsigned int* start, unsigned int* end, unsigned int* dest) {
+        void CopyFrameVolume(vector<unsigned int> &start, vector<unsigned int> &end, vector<unsigned int> &dest) {
 
-            unsigned int positionFrom[dimensionality_];
-            unsigned int positionTo[dimensionality_];
+            vector<unsigned int> positionFrom = start;
+            vector<unsigned int> positionTo = dest;
             bool copyFinished = false;
             int pixelsCopied = 0;
-
-            memcpy(positionFrom, start, sizeof(unsigned int) * dimensionality_);
-            memcpy(positionTo, dest, sizeof(unsigned int) * dimensionality_);
 
             // Move from start to end, filling in each location with the provided pixel
             do {
@@ -232,14 +224,15 @@ namespace nddi {
 
         }
 
-        void setPixel(unsigned int* location, Pixel pixel) {
+        void setPixel(vector<unsigned int> &location, Pixel pixel) {
 
-            unsigned int offset = 0;
-            unsigned int multiplier = 1;
+            unsigned int  offset = 0;
+            unsigned int  multiplier = 1;
 
+            assert(dimensionality_ == location.size());
             assert(!costModel_->isHeadless());
 
-            for (int i = 0; i < dimensionality_; i++) {
+            for (int i = 0; i < location.size(); i++) {
                 assert(location[i] < dimensionalSizes_[i]);
 
                 offset += location[i] * multiplier;
@@ -251,15 +244,16 @@ namespace nddi {
             costModel_->registerMemoryCharge(FRAME_VOLUME_COMPONENT, WRITE_ACCESS, pixels_ + offset, BYTES_PER_PIXEL, 0);
         }
 
-        Pixel getPixel(unsigned int* location) {
+        Pixel getPixel(vector<unsigned int> &location) {
 
             Pixel         pixel;
             unsigned int  offset = 0;
             unsigned int  multiplier = 1;
 
+            assert(dimensionality_ == location.size());
             assert(!costModel_->isHeadless());
 
-            for (int i = 0; i < dimensionality_; i++) {
+            for (int i = 0; i < location.size(); i++) {
                 assert(location[i] < dimensionalSizes_[i]);
 
                 offset += location[i] * multiplier;

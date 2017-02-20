@@ -41,7 +41,6 @@ ClNddiDisplay::ClNddiDisplay(unsigned int frameVolumeDimensionality,
     numPlanes_ = numCoefficientPlanes;
     frameVolumeDimensionality_ = frameVolumeDimensionality;
     frameVolumeDimensionalSizes_ = (unsigned int*)malloc(sizeof(unsigned int) * frameVolumeDimensionality);
-    memcpy(frameVolumeDimensionalSizes_, frameVolumeDimensionalSizes, sizeof(unsigned int) * frameVolumeDimensionality);
     displayWidth_ = displayWidth;
     displayHeight_ = displayHeight;
     quiet_ = true;
@@ -438,7 +437,7 @@ void ClNddiDisplay::Render() {
     }
 }
 
-void ClNddiDisplay::PutPixel(Pixel p, unsigned int* location) {
+void ClNddiDisplay::PutPixel(Pixel p, vector<unsigned int> &location) {
 
     // Register transmission cost first
     costModel->registerTransmissionCharge(CALC_BYTES_FOR_PIXELS(1) +         // One Pixel
@@ -455,7 +454,7 @@ void ClNddiDisplay::PutPixel(Pixel p, unsigned int* location) {
 #endif
 }
 
-void ClNddiDisplay::CopyPixelStrip(Pixel* p, unsigned int* start, unsigned int* end) {
+void ClNddiDisplay::CopyPixelStrip(Pixel* p, vector<unsigned int> &start, vector<unsigned int> &end) {
 
     int dimensionToCopyAlong;
     bool dimensionFound = false;
@@ -484,11 +483,11 @@ void ClNddiDisplay::CopyPixelStrip(Pixel* p, unsigned int* start, unsigned int* 
 #endif
 }
 
-void ClNddiDisplay::CopyPixels(Pixel* p, unsigned int* start, unsigned int* end) {
+void ClNddiDisplay::CopyPixels(Pixel* p, vector<unsigned int> &start, vector<unsigned int> &end) {
 
     // Register transmission cost first
     int pixelsToCopy = 1;
-    for (int i = 0; i < frameVolumeDimensionality_; i++) {
+    for (int i = 0; i < start.size(); i++) {
         pixelsToCopy *= end[i] - start[i] + 1;
     }
     costModel->registerTransmissionCharge(CALC_BYTES_FOR_PIXELS(pixelsToCopy) +    // Range of pixels
@@ -535,7 +534,7 @@ void ClNddiDisplay::CopyPixelTiles(vector<Pixel*> &p, vector<vector<unsigned int
 #endif
 }
 
-void ClNddiDisplay::FillPixel(Pixel p, unsigned int* start, unsigned int* end) {
+void ClNddiDisplay::FillPixel(Pixel p, vector<unsigned int> &start, vector<unsigned int> &end) {
 
     // Register transmission cost first
     costModel->registerTransmissionCharge(CALC_BYTES_FOR_PIXELS(1) +         // One Pixel
@@ -552,7 +551,7 @@ void ClNddiDisplay::FillPixel(Pixel p, unsigned int* start, unsigned int* end) {
 #endif
 }
 
-void ClNddiDisplay::CopyFrameVolume(unsigned int* start, unsigned int* end, unsigned int* dest) {
+void ClNddiDisplay::CopyFrameVolume(vector<unsigned int> &start, vector<unsigned int> &end, vector<unsigned int> &dest) {
 
     // Register transmission cost first
     costModel->registerTransmissionCharge(CALC_BYTES_FOR_FV_COORD_TUPLES(3), // Three Coordinate Tuples
@@ -568,7 +567,7 @@ void ClNddiDisplay::CopyFrameVolume(unsigned int* start, unsigned int* end, unsi
 #endif
 }
 
-void ClNddiDisplay::UpdateInputVector(int* input) {
+void ClNddiDisplay::UpdateInputVector(vector<int> &input) {
 
     assert(input.size() == inputVector_->getSize() - 2);
 

@@ -153,7 +153,7 @@ namespace nddi {
          * @param p The pixel value to be copied.
          * @param location The location within the frame volume where the pixel will be copied to.
          */
-        virtual void PutPixel(Pixel p, unsigned int* location) = 0;
+        virtual void PutPixel(Pixel p, vector<unsigned int> &location) = 0;
 
         /**
          * Copies the one dimensional array of pixels along a particular dimension in the frame volume. In a
@@ -165,7 +165,7 @@ namespace nddi {
          * @param end The last pixel in the frame volume to be filled. All but one of the values in
          *            values in this last pixel should be identical to the start pixel.
          */
-        virtual void CopyPixelStrip(Pixel* p, unsigned int* start, unsigned int* end) = 0;
+        virtual void CopyPixelStrip(Pixel* p, vector<unsigned int> &start, vector<unsigned int> &end) = 0;
 
         /**
          * Copies the array of pixels into the designated region of the frame volume. The data must be
@@ -177,7 +177,7 @@ namespace nddi {
          * @param start The first pixel in the frame volume to be filled.
          * @param end The last pixel in the frame volume to be filled.
          */
-        virtual void CopyPixels(Pixel* p, unsigned int* start, unsigned int* end) = 0;
+        virtual void CopyPixels(Pixel* p, vector<unsigned int> &start, vector<unsigned int> &end) = 0;
 
         /**
          * Copies the array of pixels into the designated tile regions of the frame volume. The data must be
@@ -198,7 +198,7 @@ namespace nddi {
          * @param start The first pixel in the frame volume to be filled.
          * @param end The last pixel in the frame volume to be filled.
          */
-        virtual void FillPixel(Pixel p, unsigned int* start, unsigned int* end) = 0;
+        virtual void FillPixel(Pixel p, vector<unsigned int> &start, vector<unsigned int> &end) = 0;
 
         /**
          * Copies pixels from one multi-dimensional region of the frame volume to another region.
@@ -207,7 +207,7 @@ namespace nddi {
          * @param end The ending coordinate of the source region.
          * @param dest The starting coordinate of the destination region.
          */
-        virtual void CopyFrameVolume(unsigned int* start, unsigned int* end, unsigned int* dest) = 0;
+        virtual void CopyFrameVolume(vector<unsigned int> &start, vector<unsigned int> &end, vector<unsigned int> &dest) = 0;
 
         /**
          * Used to update the input vector with the extra values in the input vector.

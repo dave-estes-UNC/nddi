@@ -47,7 +47,7 @@ public:
     void PutPixel(Pixel p, unsigned int* location);
     void CopyPixelStrip(Pixel* p, unsigned int* start, unsigned int* end);
     void CopyPixels(Pixel* p, unsigned int* start, unsigned int* end);
-    void CopyPixelTiles(Pixel** p, unsigned int* starts, unsigned int* size, size_t count);
+    void CopyPixelTiles(vector<Pixel*> &p, vector<vector<unsigned int> > &starts, vector<unsigned int> &size);
     void FillPixel(Pixel p, unsigned int* start, unsigned int* end);
     void CopyFrameVolume(unsigned int* start, unsigned int* end, unsigned int* dest);
     void UpdateInputVector(int* input);

@@ -140,29 +140,36 @@ void BaseNddiDisplay::CopyPixels(Pixel* p, unsigned int* start, unsigned int* en
 #endif
 }
 
-void BaseNddiDisplay::CopyPixelTiles(Pixel** p, unsigned int* starts, unsigned int* size, size_t count) {
+void BaseNddiDisplay::CopyPixelTiles(vector<Pixel*> &p, vector<vector<unsigned int> > &starts, vector<unsigned int> &size) {
+
+    size_t tile_count = p.size();
+
+    // Ensure parameter vectors' sizes match
+    assert(starts.size() == tile_count);
+    assert(starts[0].size() == frameVolumeDimensionality_);
+    assert(size.size() == 2);
 
     // Register transmission cost first
     int pixelsToCopy = 1;
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < size.size(); i++) {
         pixelsToCopy *= size[i];
     }
-    pixelsToCopy *= count;
-    costModel->registerTransmissionCharge(CALC_BYTES_FOR_PIXELS(pixelsToCopy) +       // t tiles of x by y tiles of pixels
-                                          CALC_BYTES_FOR_FV_COORD_TUPLES(count + 1) + // t start coordinate tuples + 1 tuple for tile size dimensions
-                                          CALC_BYTES_FOR_TILE_COORD_DOUBLES(1),       // 1 X by Y tile dimension double
+    pixelsToCopy *= tile_count;
+    costModel->registerTransmissionCharge(CALC_BYTES_FOR_PIXELS(pixelsToCopy) +            // t tiles of x by y tiles of pixels
+                                          CALC_BYTES_FOR_FV_COORD_TUPLES(tile_count + 1) + // t start coordinate tuples + 1 tuple for tile size dimensions
+                                          CALC_BYTES_FOR_TILE_COORD_DOUBLES(1),            // 1 X by Y tile dimension double
                                           0);
 
     // Copy pixels
     unsigned int start[frameVolumeDimensionality_];
     unsigned int end[frameVolumeDimensionality_];
-    for (int i = 0; i < count; i++) {
-        start[0] = starts[i * frameVolumeDimensionality_ + 0];
-        start[1] = starts[i * frameVolumeDimensionality_ + 1];
+    for (int i = 0; i < starts.size(); i++) {
+        start[0] = starts[i][0];
+        start[1] = starts[i][1];
         end[0] = start[0] + size[0]- 1; if (end[0] >= frameVolumeDimensionalSizes_[0]) end[0] = frameVolumeDimensionalSizes_[0] - 1;
         end[1] = start[1] + size[1] - 1; if (end[1] >= frameVolumeDimensionalSizes_[1]) end[1] = frameVolumeDimensionalSizes_[1] - 1;
         for (int j = 2; j < frameVolumeDimensionality_; j++) {
-            start[j] = end[j] = starts[i * frameVolumeDimensionality_ + j];
+            start[j] = end[j] = starts[i][j];
         }
         frameVolume_->CopyPixels(p[i], start, end);
     }

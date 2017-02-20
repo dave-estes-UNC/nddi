@@ -282,7 +282,7 @@ public:
 
     // TODO(CDE): Since I use clEnqueueCopyBufferRect below, I can't support frame volumes with
     //            dimensionality greater that 3. Fix it with some creative destination origin calculations.
-    void CopyPixelTiles(Pixel** p, unsigned int* starts, unsigned int* size, size_t count) {
+    void CopyPixelTiles(vector<Pixel*> &p, vector<vector<unsigned int> > &starts, vector<unsigned int> &size) {
 
         unsigned int *             packetPtr = (unsigned int *)packet_;
         size_t                     packetWordCount = 0;
@@ -291,7 +291,7 @@ public:
         cl_event *                 pEvent = NULL;
 
         // Then for each tile...
-        for (size_t i = 0; i < count; i++) {
+        for (size_t i = 0; i < starts.size(); i++) {
 
             // Copy the pixels into the packet
             memcpy(&packetPtr[packetWordCount], p[i], tileSize * sizeof(Pixel));
@@ -302,8 +302,8 @@ public:
             // transmission cost (applied in ClNddiDisplay), but the kernel will clamp
             // and not attempt to write the excess bytes. Therefore should not count the
             // overlap when registering a memory charge.
-            size_t w = (starts[i * dimensionality_ + 0] + size[0] < dimensionalSizes_[0]) ? size[0] : dimensionalSizes_[0] - starts[i * dimensionality_ + 0];
-            size_t h = (starts[i * dimensionality_ + 1] + size[1] < dimensionalSizes_[1]) ? size[1] : dimensionalSizes_[1] - starts[i * dimensionality_ + 1];
+            size_t w = (starts[i][0] + size[0] < dimensionalSizes_[0]) ? size[0] : dimensionalSizes_[0] - starts[i][0];
+            size_t h = (starts[i][1] + size[1] < dimensionalSizes_[1]) ? size[1] : dimensionalSizes_[1] - starts[i][1];
             pixelsCopied += w * h;
         }
 
@@ -330,25 +330,25 @@ public:
             size_t src_row_pitch = size[0] * sizeof(Pixel);
             size_t src_slice_pitch = size[0] * size[1] * sizeof(Pixel);
 
-            for (size_t i = 0; i < count; i++) {
+            for (size_t i = 0; i < starts.size(); i++) {
                 // Update the origins
                 src_origin[2] = i;
-                dst_origin[0] = starts[i * dimensionality_ + 0] * sizeof(Pixel);
-                dst_origin[1] = starts[i * dimensionality_ + 1];
-                if (dimensionality_ == 3) {
-                    dst_origin[2] = starts[i * dimensionality_ + 2];
+                dst_origin[0] = starts[i][0] * sizeof(Pixel);
+                dst_origin[1] = starts[i][1];
+                if (starts[i].size() == 3) {
+                    dst_origin[2] = starts[i][2];
                 }
                 // TODO(CDE): See comment at the top of function
                 assert(starts[i].size() <= 3);
 
                 // Clamp region if we're on the last column or row
-                if (starts[i * dimensionality_ + 0] + size[0] >= dimensionalSizes_[0]) {
-                    region[0] = (dimensionalSizes_[0] - starts[i * dimensionality_ + 0]) * sizeof(Pixel);
+                if (starts[i][0] + size[0] >= dimensionalSizes_[0]) {
+                    region[0] = (dimensionalSizes_[0] - starts[i][0]) * sizeof(Pixel);
                 } else {
                     region[0] = size[0] * sizeof(Pixel);
                 }
-                if (starts[i * dimensionality_ + 1] + size[1] >= dimensionalSizes_[1]) {
-                    region[1] = dimensionalSizes_[1] - starts[i * dimensionality_ + 1];
+                if (starts[i][1] + size[1] >= dimensionalSizes_[1]) {
+                    region[1] = dimensionalSizes_[1] - starts[i][1];
                 } else {
                     region[1] = size[1];
                 }

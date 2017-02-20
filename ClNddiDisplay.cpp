@@ -505,21 +505,28 @@ void ClNddiDisplay::CopyPixels(Pixel* p, unsigned int* start, unsigned int* end)
 #endif
 }
 
-void ClNddiDisplay::CopyPixelTiles(Pixel** p, unsigned int* starts, unsigned int* size, size_t count) {
+void ClNddiDisplay::CopyPixelTiles(vector<Pixel*> &p, vector<vector<unsigned int> > &starts, vector<unsigned int> &size) {
+
+    size_t tile_count = p.size();
+
+    // Ensure parameter vectors' sizes match
+    assert(starts.size() == tile_count);
+    assert(starts[0].size() == frameVolumeDimensionality_);
+    assert(size.size() == 2);
 
     // Register transmission cost first
     int pixelsToCopy = 1;
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < size.size(); i++) {
         pixelsToCopy *= size[i];
     }
-    pixelsToCopy *= count;
-    costModel->registerTransmissionCharge(CALC_BYTES_FOR_PIXELS(pixelsToCopy) +       // t tiles of x by y tiles of pixels
-                                          CALC_BYTES_FOR_FV_COORD_TUPLES(count + 1) + // t start coordinate tuples + 1 tuple for tile size dimensions
-                                          CALC_BYTES_FOR_TILE_COORD_DOUBLES(1),       // 1 X by Y tile dimension double
+    pixelsToCopy *= starts.size();
+    costModel->registerTransmissionCharge(CALC_BYTES_FOR_PIXELS(pixelsToCopy) +            // t tiles of x by y tiles of pixels
+                                          CALC_BYTES_FOR_FV_COORD_TUPLES(tile_count + 1) + // t start coordinate tuples + 1 tuple for tile size dimensions
+                                          CALC_BYTES_FOR_TILE_COORD_DOUBLES(1),            // 1 X by Y tile dimension double
                                           0);
 
     // Copy pixels (copies to host array, sets up packet and sends it to the device
-    clFrameVolume_->CopyPixelTiles(p, starts, size, count);
+    clFrameVolume_->CopyPixelTiles(p, starts, size);
 
 #ifdef SUPRESS_EXCESS_RENDERING
     changed_ = true;

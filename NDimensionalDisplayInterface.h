@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include "CostModel.h"
 
+#include <cereal/archives/xml.hpp>
+
 using namespace std;
 
 namespace nddi {
@@ -33,6 +35,11 @@ namespace nddi {
             uint8_t a;
         };
         uint32_t packed;
+
+        template <class Archive>
+        void serialize(Archive& ar) {
+          ar(CEREAL_NVP(r), CEREAL_NVP(g), CEREAL_NVP(b), CEREAL_NVP(a));
+        }
     } Pixel;
 
     /**
@@ -47,6 +54,11 @@ namespace nddi {
             int16_t a;
         };
         uint64_t packed;
+
+        template <class Archive>
+        void serialize(Archive& ar) {
+          ar(CEREAL_NVP(r), CEREAL_NVP(g), CEREAL_NVP(b), CEREAL_NVP(a));
+        }
     } Scaler;
 
     /**

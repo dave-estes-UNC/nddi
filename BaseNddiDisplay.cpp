@@ -223,7 +223,8 @@ void BaseNddiDisplay::UpdateInputVector(int* input) {
 #endif
 }
 
-void BaseNddiDisplay::PutCoefficientMatrix(int* coefficientMatrix, unsigned int* location) {
+void BaseNddiDisplay::PutCoefficientMatrix(vector< vector<int> > &coefficientMatrix,
+                                           vector<unsigned int> &location) {
 
     // Register transmission cost first
     costModel->registerTransmissionCharge(CALC_BYTES_FOR_CMS(1) +             // One coefficient matrix
@@ -240,7 +241,9 @@ void BaseNddiDisplay::PutCoefficientMatrix(int* coefficientMatrix, unsigned int*
 #endif
 }
 
-void BaseNddiDisplay::FillCoefficientMatrix(int* coefficientMatrix, unsigned int* start, unsigned int* end) {
+void BaseNddiDisplay::FillCoefficientMatrix(vector< vector<int> > &coefficientMatrix,
+                                            vector<unsigned int> &start,
+                                            vector<unsigned int> &end) {
     // Register transmission cost first
     costModel->registerTransmissionCharge(CALC_BYTES_FOR_CMS(1) +             // One coefficient matrix
                                           CALC_BYTES_FOR_CP_COORD_TRIPLES(2), // Two Coefficient Plane Coordinate triples
@@ -256,9 +259,14 @@ void BaseNddiDisplay::FillCoefficientMatrix(int* coefficientMatrix, unsigned int
 #endif
 }
 
-void BaseNddiDisplay::FillCoefficient(int coefficient, unsigned int row, unsigned int col, unsigned int* start, unsigned int* end) {
+void BaseNddiDisplay::FillCoefficient(int coefficient,
+                                      unsigned int row, unsigned int col,
+                                      vector<unsigned int> &start,
+                                      vector<unsigned int> &end) {
     assert(row >= 0 && row < CM_HEIGHT);
     assert(col >= 0 && col < CM_WIDTH);
+    assert(start.size() == 3);
+    assert(end.size() == 3);
 
     // Register transmission cost first
     costModel->registerTransmissionCharge(BYTES_PER_COEFF * 1 +                // One coefficient
@@ -276,26 +284,34 @@ void BaseNddiDisplay::FillCoefficient(int coefficient, unsigned int row, unsigne
 #endif
 }
 
-void BaseNddiDisplay::FillCoefficientTiles(int* coefficients, unsigned int* positions, unsigned int* starts, unsigned int* size, size_t count) {
+void BaseNddiDisplay::FillCoefficientTiles(vector<int> &coefficients,
+                                           vector<vector<unsigned int> > &positions,
+                                           vector<vector<unsigned int> > &starts,
+                                           vector<unsigned int> &size) {
+
+    size_t tile_count = coefficients.size();
+
+    // Ensure parameter vectors' sizes match
+    assert(positions.size() == tile_count);
+    assert(starts.size() == tile_count);
+    assert(size.size() == 2);
 
     // Register transmission cost first
-    costModel->registerTransmissionCharge(BYTES_PER_COEFF * count +                 // count coefficients
-                                          CALC_BYTES_FOR_CM_COORD_DOUBLES(count) +  // count Coefficient Matrix Coordinate doubles
-                                          CALC_BYTES_FOR_CP_COORD_TRIPLES(count) +  // count Coefficient Plane Coordinate triples
-                                          CALC_BYTES_FOR_TILE_COORD_DOUBLES(1),     // 1 X by Y tile dimension double
+    costModel->registerTransmissionCharge(BYTES_PER_COEFF * tile_count +                 // t coefficients
+                                          CALC_BYTES_FOR_CM_COORD_DOUBLES(tile_count) +  // t Coefficient Matrix Coordinate doubles
+                                          CALC_BYTES_FOR_CP_COORD_TRIPLES(tile_count) +  // t Coefficient Plane Coordinate triples
+                                          CALC_BYTES_FOR_TILE_COORD_DOUBLES(1),          // 1 X by Y tile dimension double
                                           0);
 
     // Fill the coefficient matrices
-    unsigned int* start = starts;
-    unsigned int end[3];
-    unsigned int* position = positions;
-    for (size_t i = 0; i < count; i++) {
-        end[0] = start[0] + size[0] - 1; if (end[0] >= displayWidth_) end[0] = displayWidth_ - 1;
-        end[1] = start[1] + size[1] - 1; if (end[1] >= displayHeight_) end[1] = displayHeight_ - 1;
-        end[2] = start[2];
-        coefficientPlanes_->FillCoefficient(coefficients[i], position[0], position[1], start, end);
-        start += 3;
-        position += 2;
+    vector<unsigned int> end;
+    end.push_back(0); end.push_back(0); end.push_back(0);
+    for (size_t i = 0; i < tile_count; i++) {
+        assert(positions[i].size() == 2);
+        assert(starts[i].size() == 3);
+        end[0] = starts[i][0] + size[0] - 1; if (end[0] >= displayWidth_) end[0] = displayWidth_ - 1;
+        end[1] = starts[i][1] + size[1] - 1; if (end[1] >= displayHeight_) end[1] = displayHeight_ - 1;
+        coefficientPlanes_->FillCoefficient(coefficients[i], positions[i][0], positions[i][1], starts[i], end);
     }
 
 #ifdef SUPRESS_EXCESS_RENDERING
@@ -305,7 +321,12 @@ void BaseNddiDisplay::FillCoefficientTiles(int* coefficients, unsigned int* posi
 #endif
 }
 
-void BaseNddiDisplay::FillScaler(Scaler scaler, unsigned int* start, unsigned int* end) {
+void BaseNddiDisplay::FillScaler(Scaler scaler,
+                                 vector<unsigned int> &start,
+                                 vector<unsigned int> &end) {
+    assert(start.size() == 3);
+    assert(end.size() == 3);
+
     // Register transmission cost first
     costModel->registerTransmissionCharge(BYTES_PER_SCALER * 1 +              // One Scaler
                                           CALC_BYTES_FOR_CP_COORD_TRIPLES(2), // Two Coefficient Plane Coordinate triples
@@ -321,24 +342,31 @@ void BaseNddiDisplay::FillScaler(Scaler scaler, unsigned int* start, unsigned in
 #endif
 }
 
-void BaseNddiDisplay::FillScalerTiles(Scaler* scalers, unsigned int* starts, unsigned int* size, size_t count) {
+void BaseNddiDisplay::FillScalerTiles(vector<uint64_t> &scalers,
+                                      vector<vector<unsigned int> > &starts,
+                                      vector<unsigned int> &size) {
+    size_t tile_count = scalers.size();
     Scaler s;
 
+    // Ensure parameter vectors' sizes match
+    assert(starts.size() == tile_count);
+    assert(size.size() == 2);
+
     // Register transmission cost first
-    costModel->registerTransmissionCharge(BYTES_PER_SCALER * count +                // count scalers
-                                          CALC_BYTES_FOR_CP_COORD_TRIPLES(count) +  // count Coefficient Plane Coordinate triples
-                                          CALC_BYTES_FOR_TILE_COORD_DOUBLES(1),     // One X by Y tile dimension double
+    costModel->registerTransmissionCharge(BYTES_PER_SCALER * tile_count +                // t scalers
+                                          CALC_BYTES_FOR_CP_COORD_TRIPLES(tile_count) +  // t Coefficient Plane Coordinate triples
+                                          CALC_BYTES_FOR_TILE_COORD_DOUBLES(1),          // One X by Y tile dimension double
                                           0);
 
-    unsigned int* start = starts;
-    unsigned int end[3];
-    for (size_t i = 0; i < count; i++) {
-        end[0] = start[0] + size[0] - 1; if (end[0] >= displayWidth_) end[0] = displayWidth_ - 1;
-        end[1] = start[1] + size[1] - 1; if (end[1] >= displayHeight_) end[1] = displayHeight_ - 1;
-        end[2] = start[2];
-        s.packed = scalers[i].packed;
-        coefficientPlanes_->FillScaler(s, start, end);
-        start += 3;
+    vector<unsigned int> end;
+    end.push_back(0); end.push_back(0); end.push_back(0);
+    for (size_t i = 0; i < tile_count; i++) {
+        assert(starts[i].size() == 3);
+        end[0] = starts[i][0] + size[0] - 1; if (end[0] >= displayWidth_) end[0] = displayWidth_ - 1;
+        end[1] = starts[i][1] + size[1] - 1; if (end[1] >= displayHeight_) end[1] = displayHeight_ - 1;
+        end[2] = starts[i][2];
+        s.packed = scalers[i];
+        coefficientPlanes_->FillScaler(s, starts[i], end);
     }
 
 #ifdef SUPRESS_EXCESS_RENDERING
@@ -348,22 +376,30 @@ void BaseNddiDisplay::FillScalerTiles(Scaler* scalers, unsigned int* starts, uns
 #endif
 }
 
-void BaseNddiDisplay::FillScalerTileStack(Scaler* scalers, unsigned int* start, unsigned int* size, size_t count) {
+void BaseNddiDisplay::FillScalerTileStack(vector<uint64_t> &scalers,
+                                          vector<unsigned int> &start,
+                                          vector<unsigned int> &size) {
+    vector<unsigned int> st = start;
+
+    size_t stack_height = scalers.size();
     Scaler s;
 
+    assert(start.size() == 3);
+    assert(size.size() == 2);
+
     // Register transmission cost first
-    costModel->registerTransmissionCharge(BYTES_PER_SCALER * count +            // count scalers
+    costModel->registerTransmissionCharge(BYTES_PER_SCALER * stack_height +     // h scalers
                                           CALC_BYTES_FOR_CP_COORD_TRIPLES(1) +  // One Coefficient Plane Coordinate triples
                                           CALC_BYTES_FOR_TILE_COORD_DOUBLES(1), // One X by Y tile dimension double
                                           0);
 
-    unsigned int st[] = {start[0], start[1], start[2]};
-    unsigned int end[3];
-    for (size_t i = 0; i < count; i++) {
+    vector<unsigned int> end;
+    end.push_back(0); end.push_back(0); end.push_back(0);
+    for (size_t i = 0; i < stack_height; i++) {
         end[0] = start[0] + size[0] - 1; if (end[0] >= displayWidth_) end[0] = displayWidth_ - 1;
         end[1] = start[1] + size[1] - 1; if (end[1] >= displayHeight_) end[1] = displayHeight_ - 1;
         end[2] = start[2];
-        s.packed = scalers[i].packed;
+        s.packed = scalers[i];
         coefficientPlanes_->FillScaler(s, st, end);
         st[2]++;
     }

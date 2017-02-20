@@ -338,6 +338,8 @@ public:
                 if (dimensionality_ == 3) {
                     dst_origin[2] = starts[i * dimensionality_ + 2];
                 }
+                // TODO(CDE): See comment at the top of function
+                assert(starts[i].size() <= 3);
 
                 // Clamp region if we're on the last column or row
                 if (starts[i * dimensionality_ + 0] + size[0] >= dimensionalSizes_[0]) {

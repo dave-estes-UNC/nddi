@@ -398,7 +398,7 @@ void BaseNddiDisplay::FillScalerTileStack(vector<uint64_t> &scalers,
     for (size_t i = 0; i < stack_height; i++) {
         end[0] = start[0] + size[0] - 1; if (end[0] >= displayWidth_) end[0] = displayWidth_ - 1;
         end[1] = start[1] + size[1] - 1; if (end[1] >= displayHeight_) end[1] = displayHeight_ - 1;
-        end[2] = start[2];
+        end[2] = st[2];
         s.packed = scalers[i];
         coefficientPlanes_->FillScaler(s, st, end);
         st[2]++;

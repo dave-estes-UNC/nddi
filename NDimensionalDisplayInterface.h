@@ -105,7 +105,8 @@ namespace nddi {
          * @param inputVectorSize Used to configure the size of the input vector. It must be greater than or equal to two.
          */
         NDimensionalDisplayInterface(vector<unsigned int> &frameVolumeDimensionalSizes,
-                                     unsigned int numCoefficientPlanes, unsigned int inputVectorSize) {}
+                                     unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
+                                     bool fixed8x8Macroblocks) {}
         /**
          * Each NDimensionalDisplayInterface is configured during contruction. This contructor allows the NDDI client
          * to reduce the size of the displayable area.
@@ -120,7 +121,8 @@ namespace nddi {
          */
         NDimensionalDisplayInterface(vector<unsigned int> &frameVolumeDimensionalSizes,
                                      unsigned int displayWidth, unsigned int displayHeight,
-                                     unsigned int numCoefficientPlanes, unsigned int inputVectorSize) {}
+                                     unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
+                                     bool fixed8x8Macroblocks) {}
 
         /**
          * Used to query the display width.

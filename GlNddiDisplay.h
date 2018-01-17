@@ -21,11 +21,11 @@ public:
     GlNddiDisplay() {}
     GlNddiDisplay(std::vector<unsigned int> &frameVolumeDimensionalSizes,
                   unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                  bool headless = false);
+                  bool fixed8x8Macroblocks = false, bool headless = false);
     GlNddiDisplay(std::vector<unsigned int> &frameVolumeDimensionalSizes,
                   unsigned int displayWidth, unsigned int displayHeight,
                   unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                  bool headless = false);
+                  bool fixed8x8Macroblocks = false, bool headless = false);
     ~GlNddiDisplay();
 
     /**
@@ -46,13 +46,9 @@ public:
      */
     void SimulateRender();
 
-    void Render();
-
 private:
-    nddi::Pixel ComputePixel(unsigned int x, unsigned int y);
-#ifndef NO_OMP
-    nddi::Pixel ComputePixel(unsigned int x, unsigned int y, int* iv, nddi::Pixel* fv);
-#endif
+    void Render();
+    void ComputePixels(unsigned int x, unsigned int y, unsigned int length, bool doCostCalculation);
     void RegisterBulkRenderCost();
 
 

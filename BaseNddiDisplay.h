@@ -77,6 +77,11 @@ namespace nddi {
         uint16_t  fullScaler_;
 
         /**
+         * Indicates if the display has fixed 8x8 macroblocks.
+         */
+        bool fixed8x8Macroblocks_;
+
+        /**
          * The fullScaler is used to set this shift amount, which is used once an entire stack of
          * pixels is accumulated.
          */
@@ -101,11 +106,11 @@ namespace nddi {
         BaseNddiDisplay();
         BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                         unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                        bool headless = false);
+                        bool fixed8x8Macroblocks = false, bool headless = false);
         BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                         unsigned int displayWidth, unsigned int displayHeight,
                         unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                        bool headless = false);
+                        bool fixed8x8Macroblocks = false, bool headless = false);
         ~BaseNddiDisplay();
         unsigned int DisplayWidth();
         unsigned int DisplayHeight();

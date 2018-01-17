@@ -9,6 +9,7 @@
 #ifndef pixelbridge_CoefficientPlanes_h
 #define pixelbridge_CoefficientPlanes_h
 
+#include <algorithm>
 #include <cstdlib>
 #include <cassert>
 
@@ -19,13 +20,17 @@
  * These helper macros will calculate the offset into scaler memory or coefficient memory. This is helpful
  * for tweaking the layout when doing memory profiling experiments.
  */
+#define MB_FACTOR       (fixed8x8Macroblocks_ ? 8 : 1)
+#define MB_SCALE(v)     (fixed8x8Macroblocks_ ? v >> 3 : v)
+#define MB_SCALE_UP(v)  (fixed8x8Macroblocks_ ? (v + 7) >> 3 : v)
+
 // R x C x P
-#define SC_OFF(x, y, p, c)   ((y * width_ * numPlanes_ + x * numPlanes_ + p) * 3 + c)
-//#define CP_OFF(x, y, p)   ((y * width_ * numPlanes_ + x * numPlanes_ + p) * matrixWidth_ * matrixHeight_)
+#define SC_OFF(x, y, p, c)   ((MB_SCALE(y) * MB_SCALE_UP(width_) * numPlanes_ + MB_SCALE(x) * numPlanes_ + p) * 3 + c)
+//#define CP_OFF(x, y, p)   ((MB_SCALE(y) * MB_SCALE_UP(width_) * numPlanes_ + MB_SCALE(x) * numPlanes_ + p) * matrixWidth_ * matrixHeight_)
 
 // P x R x C
-//#define SC_OFF(x, y, p, c)   ((p * height_ * width_ + y * width_ + x) * 3 + c)
-#define CP_OFF(x, y, p)   ((p * height_ * width_ + y * width_ + x) * matrixWidth_ * matrixHeight_)
+//#define SC_OFF(x, y, p, c)   ((p * MB_SCALE_UP(height_) * MB_SCALE_UP(width_) + MB_SCALE(y) * MB_SCALE_UP(width_) + MB_SCALE(x)) * 3 + c)
+#define CP_OFF(x, y, p)   ((p * MB_SCALE_UP(height_) * MB_SCALE_UP(width_) + MB_SCALE(y) * MB_SCALE_UP(width_) + MB_SCALE(x)) * matrixWidth_ * matrixHeight_)
 
 using namespace std;
 
@@ -36,6 +41,7 @@ namespace nddi {
     protected:
         CostModel           * costModel_;
         size_t                width_, height_, numPlanes_, matrixWidth_, matrixHeight_;
+        bool                  fixed8x8Macroblocks_;
         CoefficientMatrix   * coefficientMatrix_;
         Coeff               * coefficients_;
         int16_t             * scalers_;
@@ -48,19 +54,21 @@ namespace nddi {
         CoefficientPlanes(CostModel* costModel,
                          unsigned int displayWidth, unsigned int displayHeight,
                          unsigned int numPlanes,
-                         unsigned int matrixWidth, unsigned int matrixHeight)
+                         unsigned int matrixWidth, unsigned int matrixHeight,
+                         bool fixed8x8Macroblocks = false)
         : costModel_(costModel),
           width_(displayWidth), height_(displayHeight),
           numPlanes_(numPlanes),
-          matrixWidth_(matrixWidth), matrixHeight_(matrixHeight) {
+          matrixWidth_(matrixWidth), matrixHeight_(matrixHeight),
+          fixed8x8Macroblocks_(fixed8x8Macroblocks) {
 
             // Create the common CoefficientMatrix
             coefficientMatrix_ =  new CoefficientMatrix(costModel_, matrixWidth, matrixHeight);
 
             // Alloc the actual coefficients and scalers
             if (!costModel_->isHeadless()) {
-                coefficients_ = (Coeff *)malloc(CoefficientMatrix::memoryRequired(matrixWidth, matrixHeight) * displayWidth * displayHeight * numPlanes_);
-                scalers_ = (int16_t *)malloc(sizeof(int16_t) * 3 * displayWidth * displayHeight * numPlanes_);
+                coefficients_ = (Coeff *)malloc(CoefficientMatrix::memoryRequired(matrixWidth, matrixHeight) * MB_SCALE_UP(displayWidth) * MB_SCALE_UP(displayHeight) * numPlanes_);
+                scalers_ = (int16_t *)malloc(sizeof(int16_t) * 3 * MB_SCALE_UP(displayWidth) * MB_SCALE_UP(displayHeight) * numPlanes_);
             }
         }
 
@@ -103,6 +111,7 @@ namespace nddi {
             assert(location[2] < numPlanes_);
             assert(coefficientMatrix.size() == matrixWidth_);
             assert(coefficientMatrix[0].size() == matrixHeight_);
+            assert(!fixed8x8Macroblocks_ || (!(location[0] % 8) && !(location[1] % 8)));
 
             if (!costModel_->isHeadless()) {
                 // Examine each coefficient in the coefficient matrix vector and use it unless it's a COFFICIENT_UNCHANGED
@@ -170,11 +179,14 @@ namespace nddi {
                 matricesFilled++;
 
                 // Move to the next position
-                if (++position[0] > end[0]) {
+                position[0] += MB_FACTOR;
+                if (position[0] > end[0]) {
                     position[0] = start[0];
-                    if (++position[1] > end[1]) {
+                    position[1] += MB_FACTOR;
+                    if (position[1] > end[1]) {
                         position[1] = start[1];
-                        if (++position[2] > end[2]) {
+                        position[2]++;
+                        if (position[2] > end[2]) {
                             fillFinished = true;
                         }
                     }
@@ -225,11 +237,14 @@ namespace nddi {
                 coefficientsFilled++;
 
                 // Move to the next position
-                if (++position[0] > end[0]) {
+                position[0] += MB_FACTOR;
+                if (position[0] > end[0]) {
                     position[0] = start[0];
-                    if (++position[1] > end[1]) {
+                    position[1] += MB_FACTOR;
+                    if (position[1] > end[1]) {
                         position[1] = start[1];
-                        if (++position[2] > end[2]) {
+                        position[2]++;
+                        if (position[2] > end[2]) {
                             fillFinished = true;
                         }
                     }
@@ -264,17 +279,38 @@ namespace nddi {
 
             // Move from start to end, filling in each location with the provided pixel
             do {
+                // Calculate the size of the block that we're affecting. Normally, we write
+                // one scaler at a time, but in the case of fixed macroblocks, it might be
+                // up to MB_FACTOR x MB_FACTOR.
+                int blockSize = (min(position[0] + MB_FACTOR, end[0]) - position[0] + 1) *
+                                (min(position[1] + MB_FACTOR, end[1]) - position[1] + 1);
+
                 // Set scaler at this position in the coefficient plane
-                if (!costModel_->isHeadless())
+                if (!costModel_->isHeadless()) {
                     putScaler(position[0], position[1], position[2], scaler);
-                scalersFilled++;
+                    if (MB_FACTOR > 1) {
+                        // Make a bulk charge for the other scalers in the macroblock
+                        blockSize--;
+                        costModel_->registerBulkMemoryCharge(COEFFICIENT_PLANE_COMPONENT,
+                                                             blockSize,
+                                                             WRITE_ACCESS,
+                                                             NULL,
+                                                             blockSize * BYTES_PER_SCALER,
+                                                             0);
+                    }
+                } else {
+                    scalersFilled += blockSize;
+                }
 
                 // Move to the next position
-                if (++position[0] > end[0]) {
+                position[0] += MB_FACTOR;
+                if (position[0] > end[0]) {
                     position[0] = start[0];
-                    if (++position[1] > end[1]) {
+                    position[1] += MB_FACTOR;
+                    if (position[1] > end[1]) {
                         position[1] = start[1];
-                        if (++position[2] > end[2]) {
+                        position[2]++;
+                        if (position[2] > end[2]) {
                             fillFinished = true;
                         }
                     }
@@ -306,6 +342,7 @@ namespace nddi {
             assert(x < width_);
             assert(y < height_);
             assert(!costModel_->isHeadless());
+            assert(!fixed8x8Macroblocks_ || (!(x % 8) && !(y % 8)));
 
             // TODO(CDE): Get this working properly
             costModel_->registerMemoryCharge(COEFFICIENT_PLANE_COMPONENT, WRITE_ACCESS, &scalers_[SC_OFF(x, y, p, 0)], BYTES_PER_SCALER, 0);
@@ -334,18 +371,14 @@ namespace nddi {
             return s;
         }
 
-        int16_t * dataScaler() {
+        int16_t * dataScaler(size_t x, size_t y, size_t p) {
             assert(!costModel_->isHeadless());
-            return scalers_;
+            return &scalers_[SC_OFF(x, y, p, 0)];
         }
 
         Coeff * dataCoefficient(size_t x, size_t y, size_t p) {
             assert(!costModel_->isHeadless());
             return &coefficients_[CP_OFF(x, y, p)];
-        }
-
-        inline size_t computeScalerOffset(size_t x, size_t y, size_t p) {
-            return SC_OFF(x, y, p, 0);
         }
 
     };

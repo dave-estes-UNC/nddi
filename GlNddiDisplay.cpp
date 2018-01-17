@@ -43,7 +43,7 @@ inline uint8_t TRUNCATE_BYTE(int32_t i) {
 
 GlNddiDisplay::GlNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                              unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                             bool headless) {
+                             bool fixed8x8Macroblocks, bool headless) {
     texture_ = 0;
     GlNddiDisplay(frameVolumeDimensionalSizes, 320, 240, numCoefficientPlanes, inputVectorSize);
 }
@@ -51,7 +51,7 @@ GlNddiDisplay::GlNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
 GlNddiDisplay::GlNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                              unsigned int displayWidth, unsigned int displayHeight,
                              unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                             bool headless) {
+                             bool fixed8x8Macroblocks, bool headless) {
 
     numPlanes_ = numCoefficientPlanes;
     frameVolumeDimensionalSizes_ = frameVolumeDimensionalSizes;
@@ -70,7 +70,10 @@ GlNddiDisplay::GlNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
     frameVolume_ = new FrameVolume(costModel, frameVolumeDimensionalSizes);
 
     // Setup coefficient plane with zeroed coefficient matrices
-    coefficientPlanes_ = new CoefficientPlanes(costModel, displayWidth_, displayHeight_, numCoefficientPlanes, CM_WIDTH, CM_HEIGHT);
+    coefficientPlanes_ = new CoefficientPlanes(costModel,
+            displayWidth_, displayHeight_, numCoefficientPlanes,
+            CM_WIDTH, CM_HEIGHT,
+            fixed8x8Macroblocks);
 
     // allocate a texture name
     glGenTextures( 1, &texture_ );
@@ -104,25 +107,19 @@ void GlNddiDisplay::Render() {
     if (!quiet_)
         gettimeofday(&startTime, NULL);
 
-    // Even though the InputVector can be invoked concurrently, it's really slow. So
-    // we'll use a local copy instead and update the cost model in bulk later.
+    bool doCostCalculation = true;
 #ifndef NO_OMP
-    int   * iv = inputVector_->data();
-    Pixel * fv = frameVolume_->data();
+    doCostCalculation = false;
 #pragma omp parallel for
 #endif // !NO_OMP
-    for (int j = 0; j < displayHeight_; j++) {
-        for (int i = 0; i < displayWidth_; i++) {
-#ifndef NO_OMP
-            frameBuffer_[j * displayWidth_ + i].packed = ComputePixel(i, j, iv, fv).packed;
-#else
-            frameBuffer_[j * displayWidth_ + i].packed = ComputePixel(i, j).packed;
-#endif
+    for (unsigned int y = 0; y < displayHeight_; y += 8) {
+        for (unsigned int x = 0; x < displayWidth_; x += 8) {
+            ComputePixels(x, y, 8, doCostCalculation);
         }
     }
 
     // Update the cost model for the in bulk now if we are using OpenMP since we bypassed the traditional
-    // getters for input vector, frame volume, and coefficient matrix.
+    // getters for input vector, frame volume, and coefficient matrix in ComputePixel
 #ifndef NO_OMP
     RegisterBulkRenderCost();
 #endif
@@ -144,198 +141,155 @@ void GlNddiDisplay::Render() {
 
 }
 
-Pixel GlNddiDisplay::ComputePixel(unsigned int x, unsigned int y) {
+void GlNddiDisplay::ComputePixels(unsigned int x, unsigned int y, unsigned int length, bool doCostCalculation) {
 
-    int32_t    rAccumulator = 0, gAccumulator = 0, bAccumulator = 0;
-    Pixel      q;
+    int32_t       rAccumulator, gAccumulator, bAccumulator;
+    Pixel         q;
+    unsigned int  startx = x, starty = y;
+    bool          fixed = fixed8x8Macroblocks_ && length == 8;
 
-    q.packed = 0;
-
-    // Accumulate color channels for the pixels chosen by each plane
-    for (unsigned int p = 0; p < numPlanes_; p++) {
-
-        // Grab the scaler for this location
-        Scaler scaler = coefficientPlanes_->getScaler(x, y, p);
-#ifdef SKIP_COMPUTE_WHEN_SCALER_ZERO
-        if (scaler.packed == 0) continue;
-#endif
-
-        // Compute the position vector for the proper pixel in the frame volume.
-        vector<unsigned int> location;
-        location.push_back(x); location.push_back(y); location.push_back(p);
-        vector<unsigned int> fvPosition;
-        // Matrix multiply the input vector by the coefficient matrix
-        for (int j = 0; j < CM_HEIGHT; j++) {
-            // Initialize to zero
-            fvPosition.push_back(0);
-            // No need to read the x and y from the input vector, just multiply directly.
-            fvPosition[j] += coefficientPlanes_->GetCoefficient(location, 0, j) * x;
-            fvPosition[j] += coefficientPlanes_->GetCoefficient(location, 1, j) * y;
-            // Then multiply the remainder of the input vector
-            for (int i = 2; i < CM_WIDTH; i++) {
-                fvPosition[j] += coefficientPlanes_->GetCoefficient(location, i, j) * inputVector_->getValue(i);
-            }
-        }
-        q = frameVolume_->getPixel(fvPosition);
-#ifdef USE_ALPHA_CHANNEL
-        if (pixelSignMode_ == UNSIGNED_MODE) {
-            rAccumulator += (uint8_t)q.r * (uint8_t)q.a * scaler.r;
-            gAccumulator += (uint8_t)q.g * (uint8_t)q.a * scaler.g;
-            bAccumulator += (uint8_t)q.b * (uint8_t)q.a * scaler.b;
-        } else {
-            rAccumulator += (int8_t)q.r * (uint8_t)q.a * scaler.r;
-            gAccumulator += (int8_t)q.g * (uint8_t)q.a * scaler.g;
-            bAccumulator += (int8_t)q.b * (uint8_t)q.a * scaler.b;
-        }
-#else
-        if (pixelSignMode_ == UNSIGNED_MODE) {
-            rAccumulator += (uint8_t)q.r * scaler.r;
-            gAccumulator += (uint8_t)q.g * scaler.g;
-            bAccumulator += (uint8_t)q.b * scaler.b;
-        } else {
-            rAccumulator += (int8_t)q.r * scaler.r;
-            gAccumulator += (int8_t)q.g * scaler.g;
-            bAccumulator += (int8_t)q.b * scaler.b;
-        }
-#endif
-    }
-
-    // Note: This shift operation will be absolutely necessary when this is implemented
-    //       in hardware to avoid the division operation.
-#ifdef USE_ALPHA_CHANNEL
-    if (pixelSignMode_ == UNSIGNED_MODE) {
-        q.r = CLAMP_UNSIGNED_BYTE(rAccumulator >> (8 + accumulatorShifter_));
-        q.g = CLAMP_UNSIGNED_BYTE(gAccumulator >> (8 + accumulatorShifter_));
-        q.b = CLAMP_UNSIGNED_BYTE(bAccumulator >> (8 + accumulatorShifter_));
-    } else {
-        q.r = CLAMP_SIGNED_BYTE(rAccumulator >> (8 + accumulatorShifter_));
-        q.g = CLAMP_SIGNED_BYTE(gAccumulator >> (8 + accumulatorShifter_));
-        q.b = CLAMP_SIGNED_BYTE(bAccumulator >> (8 + accumulatorShifter_));
-    }
-#else
-    if (pixelSignMode_ == UNSIGNED_MODE) {
-        q.r = CLAMP_UNSIGNED_BYTE(rAccumulator >> accumulatorShifter_);
-        q.g = CLAMP_UNSIGNED_BYTE(gAccumulator >> accumulatorShifter_);
-        q.b = CLAMP_UNSIGNED_BYTE(bAccumulator >> accumulatorShifter_);
-    } else {
-        q.r = CLAMP_SIGNED_BYTE(rAccumulator >> accumulatorShifter_);
-        q.g = CLAMP_SIGNED_BYTE(gAccumulator >> accumulatorShifter_);
-        q.b = CLAMP_SIGNED_BYTE(bAccumulator >> accumulatorShifter_);
-    }
-#endif
-    q.a = 255;
-
-    costModel->registerPixelMappingCharge(1);
-
-    return q;
-}
-
-#ifndef NO_OMP
-// Duplicate version of the proper ComputePixel which avoids locking
-Pixel GlNddiDisplay::ComputePixel(unsigned int x, unsigned int y, int* iv, Pixel* fv) {
-
-    int32_t    rAccumulator = 0, gAccumulator = 0, bAccumulator = 0;
-    Pixel      q;
-
-    q.packed = 0;
-
-    // Accumulate color channels for the pixels chosen by each plane
-    for (unsigned int p = 0; p < numPlanes_; p++) {
-
-        // Grab the scaler for this location.
+    // When not computing the cost per pixel, don't use the setters and getters for
+    // InputVector, FrameVolume, and CoefficientPlanes. Instead use their data directly.
+    int     *ivd;
+    Pixel   *fvd;
 #ifdef NARROW_DATA_STORES
-        int16_t * scalerData = coefficientPlanes_->dataScaler();
+    int16_t *sd;
 #else
-        int * scalerData = coefficientPlanes_->dataScaler();
+    int     *sd;
 #endif
-        Scaler scaler;
-        size_t so = coefficientPlanes_->computeScalerOffset(x, y, p);
-        scaler.r = scalerData[so + 0];
-        scaler.g = scalerData[so + 1];
-        scaler.b = scalerData[so + 2];
+    Coeff   *cmd;
+    if (!doCostCalculation) {
+        ivd = inputVector_->data();
+        fvd = frameVolume_->data();
+    }
+
+    for (y = starty; y < starty + length && y < displayHeight_; y++) {
+        for (x = startx; x < startx + length && x < displayWidth_; x++) {
+            rAccumulator = gAccumulator = bAccumulator = 0;
+            q.packed = 0;
+
+            // Accumulate color channels for the pixels chosen by each plane
+            for (unsigned int p = 0; p < numPlanes_; p++) {
+
+                // Grab the scaler for this location
+                Scaler scaler;
+                if (doCostCalculation) {
+                    scaler = coefficientPlanes_->getScaler(x, y, p);
+                } else {
+                    sd = coefficientPlanes_->dataScaler(x, y, p);
+                    scaler.r = sd[0];
+                    scaler.g = sd[1];
+                    scaler.b = sd[2];
+                    scaler.a = 0;
+                }
 #ifdef SKIP_COMPUTE_WHEN_SCALER_ZERO
-        if (scaler.packed == 0) continue;
+                if (scaler.packed == 0) continue;
 #endif
 
-        // Grab the coefficient matrix
-        Coeff * cm = coefficientPlanes_->dataCoefficient(x, y, p);
+                // Compute the position vector for the proper pixel in the frame volume. Either
+                // grab each coefficient if computing cost, or just access the coefficient matrix
+                // date directly
+                vector<unsigned int> location;
+                if (doCostCalculation) {
+                    location.push_back(x); location.push_back(y); location.push_back(p);
+                } else {
+                    cmd = coefficientPlanes_->dataCoefficient(x, y, p);
+                }
+                vector<unsigned int> fvPosition;
+                // Matrix multiply the input vector by the coefficient matrix
+                for (int j = 0; j < CM_HEIGHT; j++) {
+                    // Initialize to zero
+                    fvPosition.push_back(0);
+                    if (doCostCalculation) {
+                        // No need to read the x and y from the input vector, just multiply directly.
+                        fvPosition[j] += coefficientPlanes_->GetCoefficient(location, 0, j) * x;
+                        fvPosition[j] += coefficientPlanes_->GetCoefficient(location, 1, j) * y;
+                        // Then multiply the remainder of the input vector
+                        for (int i = 2; i < CM_WIDTH; i++) {
+                            fvPosition[j] += coefficientPlanes_->GetCoefficient(location, i, j) * inputVector_->getValue(i);
+                        }
+                    } else {
+                        // No need to read the x and y from the input vector, just multiply directly.
+                        fvPosition[j] += cmd[j * CM_WIDTH + 0] * x;
+                        fvPosition[j] += cmd[j * CM_WIDTH + 1] * y;
+                        // Then multiply the remainder of the input vector
+                        for (int i = 2; i < CM_WIDTH; i++) {
+                            fvPosition[j] += cmd[j * CM_WIDTH + i] * ivd[i];
+                        }
+                    }
+                }
 
-        // Compute the position vector for the proper pixel in the frame volume.
-        vector<unsigned int> fvPosition;
-        // Matrix multiply the input vector by the coefficient matrix
-        for (int j = 0; j < CM_HEIGHT; j++) {
-            // Initialize to zero
-            fvPosition.push_back(0);
-            // No need to read the x and y from the input vector, just multiply directly.
-            fvPosition[j] += cm[j * CM_WIDTH + 0] * x;
-            fvPosition[j] += cm[j * CM_WIDTH + 1] * y;
-            // Then multiply the remainder of the input vector
-            for (int i = 2; i < CM_WIDTH; i++) {
-                fvPosition[j] += cm[j * CM_WIDTH + i] * iv[i];
+                // Grab the pixel from the frame volume
+                if (doCostCalculation) {
+                    q = frameVolume_->getPixel(fvPosition);
+                } else {
+                    // Compute the offset and grab the pixel directly from the frame volume
+                    unsigned int offset = 0;
+                    unsigned int multiplier = 1;
+
+                    for (int i = 0; i < fvPosition.size(); i++) {
+                        offset += fvPosition[i] * multiplier;
+                        multiplier *= frameVolumeDimensionalSizes_[i];
+                    }
+
+                    q = fvd[offset];
+                }
+
+                // Compute tje pixel's contribution and add to the accumulator.
+        #ifdef USE_ALPHA_CHANNEL
+                if (pixelSignMode_ == UNSIGNED_MODE) {
+                    rAccumulator += (uint8_t)q.r * (uint8_t)q.a * scaler.r;
+                    gAccumulator += (uint8_t)q.g * (uint8_t)q.a * scaler.g;
+                    bAccumulator += (uint8_t)q.b * (uint8_t)q.a * scaler.b;
+                } else {
+                    rAccumulator += (int8_t)q.r * (uint8_t)q.a * scaler.r;
+                    gAccumulator += (int8_t)q.g * (uint8_t)q.a * scaler.g;
+                    bAccumulator += (int8_t)q.b * (uint8_t)q.a * scaler.b;
+                }
+        #else
+                if (pixelSignMode_ == UNSIGNED_MODE) {
+                    rAccumulator += (uint8_t)q.r * scaler.r;
+                    gAccumulator += (uint8_t)q.g * scaler.g;
+                    bAccumulator += (uint8_t)q.b * scaler.b;
+                } else {
+                    rAccumulator += (int8_t)q.r * scaler.r;
+                    gAccumulator += (int8_t)q.g * scaler.g;
+                    bAccumulator += (int8_t)q.b * scaler.b;
+                }
+        #endif
             }
-        }
 
-        // Compute the offset and grab the pixel directly from the frame volume
-        unsigned int offset = 0;
-        unsigned int multiplier = 1;
+            // Note: This shift operation will be absolutely necessary when this is implemented
+            //       in hardware to avoid the division operation.
+        #ifdef USE_ALPHA_CHANNEL
+            if (pixelSignMode_ == UNSIGNED_MODE) {
+                q.r = CLAMP_UNSIGNED_BYTE(rAccumulator >> (8 + accumulatorShifter_));
+                q.g = CLAMP_UNSIGNED_BYTE(gAccumulator >> (8 + accumulatorShifter_));
+                q.b = CLAMP_UNSIGNED_BYTE(bAccumulator >> (8 + accumulatorShifter_));
+            } else {
+                q.r = CLAMP_SIGNED_BYTE(rAccumulator >> (8 + accumulatorShifter_));
+                q.g = CLAMP_SIGNED_BYTE(gAccumulator >> (8 + accumulatorShifter_));
+                q.b = CLAMP_SIGNED_BYTE(bAccumulator >> (8 + accumulatorShifter_));
+            }
+        #else
+            if (pixelSignMode_ == UNSIGNED_MODE) {
+                q.r = CLAMP_UNSIGNED_BYTE(rAccumulator >> accumulatorShifter_);
+                q.g = CLAMP_UNSIGNED_BYTE(gAccumulator >> accumulatorShifter_);
+                q.b = CLAMP_UNSIGNED_BYTE(bAccumulator >> accumulatorShifter_);
+            } else {
+                q.r = CLAMP_SIGNED_BYTE(rAccumulator >> accumulatorShifter_);
+                q.g = CLAMP_SIGNED_BYTE(gAccumulator >> accumulatorShifter_);
+                q.b = CLAMP_SIGNED_BYTE(bAccumulator >> accumulatorShifter_);
+            }
+        #endif
+            q.a = 255;
 
-        for (int i = 0; i < fvPosition.size(); i++) {
-            offset += fvPosition[i] * multiplier;
-            multiplier *= frameVolumeDimensionalSizes_[i];
-        }
+            if (doCostCalculation) costModel->registerPixelMappingCharge(1);
 
-        q = fv[offset];
-#ifdef USE_ALPHA_CHANNEL
-        if (pixelSignMode_ == UNSIGNED_MODE) {
-            rAccumulator += (uint8_t)q.r * (uint8_t)q.a * scaler.r;
-            gAccumulator += (uint8_t)q.g * (uint8_t)q.a * scaler.g;
-            bAccumulator += (uint8_t)q.b * (uint8_t)q.a * scaler.b;
-        } else {
-            rAccumulator += (int8_t)q.r * (uint8_t)q.a * scaler.r;
-            gAccumulator += (int8_t)q.g * (uint8_t)q.a * scaler.g;
-            bAccumulator += (int8_t)q.b * (uint8_t)q.a * scaler.b;
+            frameBuffer_[y * displayWidth_ + x] = q;
         }
-#else
-        if (pixelSignMode_ == UNSIGNED_MODE) {
-            rAccumulator += (uint8_t)q.r * scaler.r;
-            gAccumulator += (uint8_t)q.g * scaler.g;
-            bAccumulator += (uint8_t)q.b * scaler.b;
-        } else {
-            rAccumulator += (int8_t)q.r * scaler.r;
-            gAccumulator += (int8_t)q.g * scaler.g;
-            bAccumulator += (int8_t)q.b * scaler.b;
-        }
-#endif
     }
-
-    // Note: This shift operation will be absolutely necessary when this is implemented
-    //       in hardware to avoid the division operation.
-#ifdef USE_ALPHA_CHANNEL
-    if (pixelSignMode_ == UNSIGNED_MODE) {
-        q.r = CLAMP_UNSIGNED_BYTE(rAccumulator >> (8 + accumulatorShifter_));
-        q.g = CLAMP_UNSIGNED_BYTE(gAccumulator >> (8 + accumulatorShifter_));
-        q.b = CLAMP_UNSIGNED_BYTE(bAccumulator >> (8 + accumulatorShifter_));
-    } else {
-        q.r = CLAMP_SIGNED_BYTE(rAccumulator >> (8 + accumulatorShifter_));
-        q.g = CLAMP_SIGNED_BYTE(gAccumulator >> (8 + accumulatorShifter_));
-        q.b = CLAMP_SIGNED_BYTE(bAccumulator >> (8 + accumulatorShifter_));
-    }
-#else
-    if (pixelSignMode_ == UNSIGNED_MODE) {
-        q.r = CLAMP_UNSIGNED_BYTE(rAccumulator >> accumulatorShifter_);
-        q.g = CLAMP_UNSIGNED_BYTE(gAccumulator >> accumulatorShifter_);
-        q.b = CLAMP_UNSIGNED_BYTE(bAccumulator >> accumulatorShifter_);
-    } else {
-        q.r = CLAMP_SIGNED_BYTE(rAccumulator >> accumulatorShifter_);
-        q.g = CLAMP_SIGNED_BYTE(gAccumulator >> accumulatorShifter_);
-        q.b = CLAMP_SIGNED_BYTE(bAccumulator >> accumulatorShifter_);
-    }
-#endif
-    q.a = 255;
-
-    return q;
 }
-#endif
 
 GLuint GlNddiDisplay::GetFrameBufferTex() {
 

@@ -17,13 +17,14 @@ BaseNddiDisplay::BaseNddiDisplay() :
         coefficientPlanes_(NULL),
         costModel(NULL),
         fixed8x8Macroblocks_(false),
+        useSingleCoeffcientPlane_(false),
         quiet_(false),
         changed_(false)
 {}
 
 BaseNddiDisplay::BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                                  unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                                 bool fixed8x8Macroblocks, bool headless) :
+                                 bool headless, bool fixed8x8Macroblocks, bool useSingleCoeffcientPlane) :
         displayWidth_(0),
         displayHeight_(0),
         numPlanes_(numCoefficientPlanes),
@@ -33,6 +34,7 @@ BaseNddiDisplay::BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSiz
         coefficientPlanes_(NULL),
         costModel(NULL),
         fixed8x8Macroblocks_(fixed8x8Macroblocks),
+        useSingleCoeffcientPlane_(useSingleCoeffcientPlane),
         quiet_(false),
         changed_(false)
 {}
@@ -40,7 +42,7 @@ BaseNddiDisplay::BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSiz
 BaseNddiDisplay::BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                                  unsigned int displayWidth, unsigned int displayHeight,
                                  unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                                 bool fixed8x8Macroblocks, bool headless) :
+                                 bool headless, bool fixed8x8Macroblocks, bool useSingleCoeffcientPlane) :
         displayWidth_(displayWidth),
         displayHeight_(displayHeight),
         numPlanes_(numCoefficientPlanes),
@@ -50,6 +52,7 @@ BaseNddiDisplay::BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSiz
         coefficientPlanes_(NULL),
         costModel(NULL),
         fixed8x8Macroblocks_(fixed8x8Macroblocks),
+        useSingleCoeffcientPlane_(useSingleCoeffcientPlane),
         quiet_(false),
         changed_(false)
 {}

@@ -20,17 +20,18 @@
  * These helper macros will calculate the offset into scaler memory or coefficient memory. This is helpful
  * for tweaking the layout when doing memory profiling experiments.
  */
-#define MB_FACTOR       (fixed8x8Macroblocks_ ? 8 : 1)
-#define MB_SCALE(v)     (fixed8x8Macroblocks_ ? v >> 3 : v)
-#define MB_SCALE_UP(v)  (fixed8x8Macroblocks_ ? (v + 7) >> 3 : v)
+#define MB_FACTOR         (fixed8x8Macroblocks_ ? 8 : 1)
+#define MB_SCALE(v)       (fixed8x8Macroblocks_ ? v >> 3 : v)
+#define MB_SCALE_UP(v)    (fixed8x8Macroblocks_ ? (v + 7) >> 3 : v)
+#define NUM_COEFF_PLANES  (useSingleCoefficientPlane_ ? 1 : numPlanes_)
 
 // R x C x P
 #define SC_OFF(x, y, p, c)   ((MB_SCALE(y) * MB_SCALE_UP(width_) * numPlanes_ + MB_SCALE(x) * numPlanes_ + p) * 3 + c)
-//#define CP_OFF(x, y, p)   ((MB_SCALE(y) * MB_SCALE_UP(width_) * numPlanes_ + MB_SCALE(x) * numPlanes_ + p) * matrixWidth_ * matrixHeight_)
+#define CP_OFF(x, y, p)   ((MB_SCALE(y) * MB_SCALE_UP(width_) * NUM_COEFF_PLANES + MB_SCALE(x) * NUM_COEFF_PLANES + p) * matrixWidth_ * matrixHeight_)
 
 // P x R x C
 //#define SC_OFF(x, y, p, c)   ((p * MB_SCALE_UP(height_) * MB_SCALE_UP(width_) + MB_SCALE(y) * MB_SCALE_UP(width_) + MB_SCALE(x)) * 3 + c)
-#define CP_OFF(x, y, p)   ((p * MB_SCALE_UP(height_) * MB_SCALE_UP(width_) + MB_SCALE(y) * MB_SCALE_UP(width_) + MB_SCALE(x)) * matrixWidth_ * matrixHeight_)
+//#define CP_OFF(x, y, p)   ((p * MB_SCALE_UP(height_) * MB_SCALE_UP(width_) + MB_SCALE(y) * MB_SCALE_UP(width_) + MB_SCALE(x)) * matrixWidth_ * matrixHeight_)
 
 using namespace std;
 
@@ -42,6 +43,7 @@ namespace nddi {
         CostModel           * costModel_;
         size_t                width_, height_, numPlanes_, matrixWidth_, matrixHeight_;
         bool                  fixed8x8Macroblocks_;
+        bool                  useSingleCoefficientPlane_;
         CoefficientMatrix   * coefficientMatrix_;
         Coeff               * coefficients_;
         int16_t             * scalers_;
@@ -55,19 +57,20 @@ namespace nddi {
                          unsigned int displayWidth, unsigned int displayHeight,
                          unsigned int numPlanes,
                          unsigned int matrixWidth, unsigned int matrixHeight,
-                         bool fixed8x8Macroblocks = false)
+                         bool fixed8x8Macroblocks = false, bool useSingleCoefficientPlane = false)
         : costModel_(costModel),
           width_(displayWidth), height_(displayHeight),
           numPlanes_(numPlanes),
           matrixWidth_(matrixWidth), matrixHeight_(matrixHeight),
-          fixed8x8Macroblocks_(fixed8x8Macroblocks) {
+          fixed8x8Macroblocks_(fixed8x8Macroblocks),
+          useSingleCoefficientPlane_(useSingleCoefficientPlane) {
 
             // Create the common CoefficientMatrix
             coefficientMatrix_ =  new CoefficientMatrix(costModel_, matrixWidth, matrixHeight);
 
             // Alloc the actual coefficients and scalers
             if (!costModel_->isHeadless()) {
-                coefficients_ = (Coeff *)malloc(CoefficientMatrix::memoryRequired(matrixWidth, matrixHeight) * MB_SCALE_UP(displayWidth) * MB_SCALE_UP(displayHeight) * numPlanes_);
+                coefficients_ = (Coeff *)malloc(CoefficientMatrix::memoryRequired(matrixWidth, matrixHeight) * MB_SCALE_UP(displayWidth) * MB_SCALE_UP(displayHeight) * (useSingleCoefficientPlane_ ? 1 : numPlanes_));
                 scalers_ = (int16_t *)malloc(sizeof(int16_t) * 3 * MB_SCALE_UP(displayWidth) * MB_SCALE_UP(displayHeight) * numPlanes_);
             }
         }
@@ -89,6 +92,25 @@ namespace nddi {
             return height_;
         }
 
+        Coeff CheckSpecialCoefficient(Coeff c, unsigned int p) {
+            Coeff ret = c;
+            switch (c) {
+            case COEFFICIENT_MATRIX_X:
+                assert(false);
+                break;
+            case COEFFICIENT_MATRIX_Y:
+                assert(false);
+                break;
+            case COEFFICIENT_MATRIX_P:
+                ret = p;
+                break;
+            default:
+                break;
+            }
+
+            return ret;
+        }
+
         Coeff GetCoefficient(vector<unsigned int> &location, int row, int col) {
             assert(location.size() == 3);
             assert(location[0] < width_);
@@ -96,11 +118,12 @@ namespace nddi {
             assert(location[2] < numPlanes_);
             assert(row < matrixWidth_);
             assert(col < matrixHeight_);
+            assert(!useSingleCoefficientPlane_ || location[2] == 0);
 
             Coeff *cm = dataCoefficient(location[0], location[1], location[2]);
             costModel_->registerMemoryCharge(COEFFICIENT_PLANE_COMPONENT, READ_ACCESS, &cm[col * matrixWidth_ + row], BYTES_PER_COEFF, 0);
 
-            return cm[col * matrixWidth_ + row];
+            return CheckSpecialCoefficient(cm[col * matrixWidth_ + row], location[2]);
         }
 
         void PutCoefficientMatrix(vector< vector<int> > &coefficientMatrix, vector<unsigned int> &location) {
@@ -112,6 +135,7 @@ namespace nddi {
             assert(coefficientMatrix.size() == matrixWidth_);
             assert(coefficientMatrix[0].size() == matrixHeight_);
             assert(!fixed8x8Macroblocks_ || (!(location[0] % 8) && !(location[1] % 8)));
+            assert(!useSingleCoefficientPlane_ || location[2] == 0);
 
             if (!costModel_->isHeadless()) {
                 // Examine each coefficient in the coefficient matrix vector and use it unless it's a COFFICIENT_UNCHANGED
@@ -152,6 +176,7 @@ namespace nddi {
             assert(end[2] < numPlanes_);
             assert(coefficientMatrix.size() == matrixWidth_);
             assert(coefficientMatrix[0].size() == matrixHeight_);
+            assert(!useSingleCoefficientPlane_ || (start[2] == 0 && end[2] == 0));
 
             vector<unsigned int> position = start;
             bool fillFinished = false;
@@ -220,6 +245,7 @@ namespace nddi {
 #ifdef NARROW_DATA_STORES
             assert(coefficient >= SHRT_MIN && coefficient <= SHRT_MAX);
 #endif
+            assert(!useSingleCoefficientPlane_ || (start[2] == 0 && end[2] == 0));
 
             vector<unsigned int> position = start;
             bool fillFinished = false;
@@ -378,6 +404,7 @@ namespace nddi {
 
         Coeff * dataCoefficient(size_t x, size_t y, size_t p) {
             assert(!costModel_->isHeadless());
+            assert(!useSingleCoefficientPlane_ || p == 0);
             return &coefficients_[CP_OFF(x, y, p)];
         }
 

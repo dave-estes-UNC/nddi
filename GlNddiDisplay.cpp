@@ -43,7 +43,7 @@ inline uint8_t TRUNCATE_BYTE(int32_t i) {
 
 GlNddiDisplay::GlNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                              unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                             bool fixed8x8Macroblocks, bool headless) {
+                             bool headless, bool fixed8x8Macroblocks, bool useSingleCoeffcientPlane) {
     texture_ = 0;
     GlNddiDisplay(frameVolumeDimensionalSizes, 320, 240, numCoefficientPlanes, inputVectorSize);
 }
@@ -51,7 +51,8 @@ GlNddiDisplay::GlNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
 GlNddiDisplay::GlNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                              unsigned int displayWidth, unsigned int displayHeight,
                              unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                             bool fixed8x8Macroblocks, bool headless) {
+                             bool headless, bool fixed8x8Macroblocks, bool useSingleCoeffcientPlane)
+: BaseNddiDisplay(frameVolumeDimensionalSizes, displayWidth, displayHeight, numCoefficientPlanes, inputVectorSize, headless, fixed8x8Macroblocks, useSingleCoeffcientPlane) {
 
     numPlanes_ = numCoefficientPlanes;
     frameVolumeDimensionalSizes_ = frameVolumeDimensionalSizes;
@@ -73,7 +74,7 @@ GlNddiDisplay::GlNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
     coefficientPlanes_ = new CoefficientPlanes(costModel,
             displayWidth_, displayHeight_, numCoefficientPlanes,
             CM_WIDTH, CM_HEIGHT,
-            fixed8x8Macroblocks);
+            fixed8x8Macroblocks, useSingleCoeffcientPlane);
 
     // allocate a texture name
     glGenTextures( 1, &texture_ );
@@ -191,9 +192,17 @@ void GlNddiDisplay::ComputePixels(unsigned int x, unsigned int y, unsigned int l
                 // date directly
                 vector<unsigned int> location;
                 if (doCostCalculation) {
-                    location.push_back(x); location.push_back(y); location.push_back(p);
+                    if (useSingleCoeffcientPlane_) {
+                        location.push_back(x); location.push_back(y); location.push_back(0);
+                    } else {
+                        location.push_back(x); location.push_back(y); location.push_back(p);
+                    }
                 } else {
-                    cmd = coefficientPlanes_->dataCoefficient(x, y, p);
+                    if (useSingleCoeffcientPlane_) {
+                        cmd = coefficientPlanes_->dataCoefficient(x, y, 0);
+                    } else {
+                        cmd = coefficientPlanes_->dataCoefficient(x, y, p);
+                    }
                 }
                 vector<unsigned int> fvPosition;
                 // Matrix multiply the input vector by the coefficient matrix
@@ -210,11 +219,11 @@ void GlNddiDisplay::ComputePixels(unsigned int x, unsigned int y, unsigned int l
                         }
                     } else {
                         // No need to read the x and y from the input vector, just multiply directly.
-                        fvPosition[j] += cmd[j * CM_WIDTH + 0] * x;
-                        fvPosition[j] += cmd[j * CM_WIDTH + 1] * y;
+                        fvPosition[j] += coefficientPlanes_->CheckSpecialCoefficient(cmd[j * CM_WIDTH + 0] * x, p);
+                        fvPosition[j] += coefficientPlanes_->CheckSpecialCoefficient(cmd[j * CM_WIDTH + 1] * y, p);
                         // Then multiply the remainder of the input vector
                         for (int i = 2; i < CM_WIDTH; i++) {
-                            fvPosition[j] += cmd[j * CM_WIDTH + i] * ivd[i];
+                            fvPosition[j] += coefficientPlanes_->CheckSpecialCoefficient(cmd[j * CM_WIDTH + i] * ivd[i], p);
                         }
                     }
                 }

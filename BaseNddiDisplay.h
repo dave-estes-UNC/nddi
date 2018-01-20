@@ -61,7 +61,7 @@ namespace nddi {
 
         /**
          * The coefficientPlanes_ is a flat buffer of coefficient matrices that are logically
-         * arranged into rows and columns maching the dimenions of the display.
+         * arranged into rows and columns matching the dimensions of the display.
          */
         CoefficientPlanes* coefficientPlanes_;
 
@@ -77,9 +77,18 @@ namespace nddi {
         uint16_t  fullScaler_;
 
         /**
-         * Indicates if the display has fixed 8x8 macroblocks.
+         * RAM Saving Implementation
+         * Indicates if the display has fixed 8x8 macroblocks, and therefore fewer coefficient matrices
+         * and scalers are used with one each per macroblock.
          */
         bool fixed8x8Macroblocks_;
+
+        /**
+         * RAM Saving Implementation
+         * Indicates that if multiple coefficient planes are to be used, that they are all identical
+         * and therefore are all represented by a single plane.
+         */
+        bool useSingleCoeffcientPlane_;
 
         /**
          * The fullScaler is used to set this shift amount, which is used once an entire stack of
@@ -106,11 +115,13 @@ namespace nddi {
         BaseNddiDisplay();
         BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                         unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                        bool fixed8x8Macroblocks = false, bool headless = false);
+                        bool headless = false,
+                        bool fixed8x8Macroblocks = false, bool useSingleCoeffcientPlane = false);
         BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                         unsigned int displayWidth, unsigned int displayHeight,
                         unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                        bool fixed8x8Macroblocks = false, bool headless = false);
+                        bool headless = false,
+                        bool fixed8x8Macroblocks = false, bool useSingleCoeffcientPlane = false);
         ~BaseNddiDisplay();
         unsigned int DisplayWidth();
         unsigned int DisplayHeight();

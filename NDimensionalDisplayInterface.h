@@ -24,6 +24,14 @@ namespace nddi {
     #define DEFAULT_FULL_SCALER 256
 
     /**
+     * Used for a coefficient to indicate that the coefficient's value is fixed to either the
+     * coefficient matrices x, y, or p.
+     */
+    #define COEFFICIENT_MATRIX_X (INT16_MIN + 2)
+    #define COEFFICIENT_MATRIX_Y (INT16_MIN + 1)
+    #define COEFFICIENT_MATRIX_P (INT16_MIN + 0)
+
+    /**
      * Struct representing an RGBA 32-bit pixel.
      * Implementation may drop the alpha channel.
      */
@@ -106,7 +114,7 @@ namespace nddi {
          */
         NDimensionalDisplayInterface(vector<unsigned int> &frameVolumeDimensionalSizes,
                                      unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                                     bool fixed8x8Macroblocks) {}
+                                     bool fixed8x8Macroblocks, bool useSingleCoeffcientPlane) {}
         /**
          * Each NDimensionalDisplayInterface is configured during contruction. This contructor allows the NDDI client
          * to reduce the size of the displayable area.
@@ -122,7 +130,7 @@ namespace nddi {
         NDimensionalDisplayInterface(vector<unsigned int> &frameVolumeDimensionalSizes,
                                      unsigned int displayWidth, unsigned int displayHeight,
                                      unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                                     bool fixed8x8Macroblocks) {}
+                                     bool fixed8x8Macroblocks, bool useSingleCoeffcientPlane) {}
 
         /**
          * Used to query the display width.

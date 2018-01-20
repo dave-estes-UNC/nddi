@@ -21,11 +21,13 @@ public:
     GlNddiDisplay() {}
     GlNddiDisplay(std::vector<unsigned int> &frameVolumeDimensionalSizes,
                   unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                  bool fixed8x8Macroblocks = false, bool headless = false);
+                  bool headless = false,
+                  bool fixed8x8Macroblocks = false, bool useSingleCoeffcientPlane = false);
     GlNddiDisplay(std::vector<unsigned int> &frameVolumeDimensionalSizes,
                   unsigned int displayWidth, unsigned int displayHeight,
                   unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                  bool fixed8x8Macroblocks = false, bool headless = false);
+                  bool headless = false,
+                  bool fixed8x8Macroblocks = false, bool useSingleCoeffcientPlane = false);
     ~GlNddiDisplay();
 
     /**

@@ -70,8 +70,13 @@ namespace nddi {
 
             // Alloc the actual coefficients and scalers
             if (!costModel_->isHeadless()) {
+#ifdef DEBUG
+                coefficients_ = (Coeff *)calloc(1, CoefficientMatrix::memoryRequired(matrixWidth, matrixHeight) * MB_SCALE_UP(displayWidth) * MB_SCALE_UP(displayHeight) * (useSingleCoefficientPlane_ ? 1 : numPlanes_));
+                scalers_ = (int16_t *)calloc(1, sizeof(int16_t) * 3 * MB_SCALE_UP(displayWidth) * MB_SCALE_UP(displayHeight) * numPlanes_);
+#else
                 coefficients_ = (Coeff *)malloc(CoefficientMatrix::memoryRequired(matrixWidth, matrixHeight) * MB_SCALE_UP(displayWidth) * MB_SCALE_UP(displayHeight) * (useSingleCoefficientPlane_ ? 1 : numPlanes_));
                 scalers_ = (int16_t *)malloc(sizeof(int16_t) * 3 * MB_SCALE_UP(displayWidth) * MB_SCALE_UP(displayHeight) * numPlanes_);
+#endif
             }
         }
 
@@ -184,6 +189,12 @@ namespace nddi {
 
             // Move from start to end, filling in each location with the provided pixel
             do {
+                // Calculate the size of the block that we're affecting. Normally, we write
+                // one scaler at a time, but in the case of fixed macroblocks, it might be
+                // up to MB_FACTOR x MB_FACTOR.
+                int blockSize = (min(position[0] + MB_FACTOR, end[0] + 1) - position[0]) *
+                                (min(position[1] + MB_FACTOR, end[1] + 1) - position[1]);
+
                 // Update coefficient matrix in coefficient plane at position
                 if (!costModel_->isHeadless()) {
                     // Examine each coefficient in the coefficient matrix vector and use it unless it's a COFFICIENT_UNCHANGED
@@ -199,9 +210,19 @@ namespace nddi {
                             }
                         }
                     }
-
+                    if (MB_FACTOR > 1) {
+                        // Make a bulk charge for the other scalers in the macroblock
+                        blockSize--;
+                        costModel_->registerBulkMemoryCharge(COEFFICIENT_PLANE_COMPONENT,
+                                                             blockSize * matrixWidth_ * matrixHeight_,
+                                                             WRITE_ACCESS,
+                                                             NULL,
+                                                             blockSize * matrixWidth_ * matrixHeight_ * BYTES_PER_COEFF,
+                                                             0);
+                    }
+                } else {
+                    matricesFilled += blockSize;
                 }
-                matricesFilled++;
 
                 // Move to the next position
                 position[0] += MB_FACTOR;
@@ -253,14 +274,31 @@ namespace nddi {
 
             // Move from start to end, filling in each location with the provided pixel
             do {
+                // Calculate the size of the block that we're affecting. Normally, we write
+                // one scaler at a time, but in the case of fixed macroblocks, it might be
+                // up to MB_FACTOR x MB_FACTOR.
+                int blockSize = (min(position[0] + MB_FACTOR, end[0] + 1) - position[0]) *
+                                (min(position[1] + MB_FACTOR, end[1] + 1) - position[1]);
+
                 // Set coefficient in the coefficient matrix at this position in the coefficient plane
                 if (!costModel_->isHeadless()) {
                     Coeff* cm = dataCoefficient(position[0], position[1], position[2]);
                     cm[row * matrixWidth_ + col] = coefficient;
                     costModel_->registerMemoryCharge(COEFFICIENT_PLANE_COMPONENT, WRITE_ACCESS, &cm[row * width_ + col], BYTES_PER_COEFF, 0);
+                    if (MB_FACTOR > 1) {
+                        // Make a bulk charge for the other scalers in the macroblock
+                        blockSize--;
+                        costModel_->registerBulkMemoryCharge(COEFFICIENT_PLANE_COMPONENT,
+                                                             blockSize,
+                                                             WRITE_ACCESS,
+                                                             NULL,
+                                                             blockSize * BYTES_PER_COEFF,
+                                                             0);
+                    }
 
+                } else {
+                    coefficientsFilled += blockSize;
                 }
-                coefficientsFilled++;
 
                 // Move to the next position
                 position[0] += MB_FACTOR;
@@ -308,8 +346,8 @@ namespace nddi {
                 // Calculate the size of the block that we're affecting. Normally, we write
                 // one scaler at a time, but in the case of fixed macroblocks, it might be
                 // up to MB_FACTOR x MB_FACTOR.
-                int blockSize = (min(position[0] + MB_FACTOR, end[0]) - position[0] + 1) *
-                                (min(position[1] + MB_FACTOR, end[1]) - position[1] + 1);
+                int blockSize = (min(position[0] + MB_FACTOR, end[0] + 1) - position[0]) *
+                                (min(position[1] + MB_FACTOR, end[1] + 1) - position[1]);
 
                 // Set scaler at this position in the coefficient plane
                 if (!costModel_->isHeadless()) {

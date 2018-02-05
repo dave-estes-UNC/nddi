@@ -16,12 +16,7 @@ namespace nddi {
      * can use this value for one or more of the elements in the matrix if they would like the element in the
      * same location of the destination coefficient matrix to remain unchanged.
      */
-    #define COFFICIENT_UNCHANGED INT_MAX
-
-    /**
-     * The default full scaler.
-     */
-    #define DEFAULT_FULL_SCALER 256
+    #define COFFICIENT_UNCHANGED INT16_MAX
 
     /**
      * Used for a coefficient to indicate that the coefficient's value is fixed to either the
@@ -30,6 +25,11 @@ namespace nddi {
     #define COEFFICIENT_MATRIX_X (INT16_MIN + 2)
     #define COEFFICIENT_MATRIX_Y (INT16_MIN + 1)
     #define COEFFICIENT_MATRIX_P (INT16_MIN + 0)
+
+    /**
+     * The default full scaler.
+     */
+    #define DEFAULT_FULL_SCALER 256
 
     /**
      * Struct representing an RGBA 32-bit pixel.

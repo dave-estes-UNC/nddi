@@ -88,7 +88,7 @@ namespace nddi {
          * Indicates that if multiple coefficient planes are to be used, that they are all identical
          * and therefore are all represented by a single plane.
          */
-        bool useSingleCoeffcientPlane_;
+        bool useSingleCoefficientPlane_;
 
         /**
          * The fullScaler is used to set this shift amount, which is used once an entire stack of

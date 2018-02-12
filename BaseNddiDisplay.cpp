@@ -17,7 +17,7 @@ BaseNddiDisplay::BaseNddiDisplay() :
         coefficientPlanes_(NULL),
         costModel(NULL),
         fixed8x8Macroblocks_(false),
-        useSingleCoeffcientPlane_(false),
+        useSingleCoefficientPlane_(false),
         quiet_(false),
         changed_(false)
 {}
@@ -34,7 +34,7 @@ BaseNddiDisplay::BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSiz
         coefficientPlanes_(NULL),
         costModel(NULL),
         fixed8x8Macroblocks_(fixed8x8Macroblocks),
-        useSingleCoeffcientPlane_(useSingleCoeffcientPlane),
+        useSingleCoefficientPlane_(useSingleCoeffcientPlane),
         quiet_(false),
         changed_(false)
 {}
@@ -52,7 +52,7 @@ BaseNddiDisplay::BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSiz
         coefficientPlanes_(NULL),
         costModel(NULL),
         fixed8x8Macroblocks_(fixed8x8Macroblocks),
-        useSingleCoeffcientPlane_(useSingleCoeffcientPlane),
+        useSingleCoefficientPlane_(useSingleCoeffcientPlane),
         quiet_(false),
         changed_(false)
 {}

@@ -86,7 +86,7 @@ public:
 
         for (int y = 0; y < matrixHeight_; y++) {
             for (int x = 0; x < matrixWidth_; x++) {
-                if (coefficientMatrix[x][y] != COEFFICIENT_UNCHANGED) {
+                if (coefficientMatrix[x][y] != COFFICIENT_UNCHANGED) {
                     *coefficientPtr = coefficientMatrix[x][y];
                 }
                 assert(0); // TODO(CDE): Shouldn't coefficientPtr be moved to the next coefficient?
@@ -134,7 +134,7 @@ public:
                     offset = calcOffset(position);
                     for (int y = 0; y < matrixHeight_; y++) {
                         for (int x = 0; x < matrixWidth_; x++) {
-                            if (coefficientMatrix[x][y] != COEFFICIENT_UNCHANGED) {
+                            if (coefficientMatrix[x][y] != COFFICIENT_UNCHANGED) {
                                 coefficients_[offset] = coefficientMatrix[x][y];
                             }
                             offset++;

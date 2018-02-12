@@ -143,10 +143,10 @@ namespace nddi {
             assert(!useSingleCoefficientPlane_ || location[2] == 0);
 
             if (!costModel_->isHeadless()) {
-                // Examine each coefficient in the coefficient matrix vector and use it unless it's a COEFFICIENT_UNCHANGED
+                // Examine each coefficient in the coefficient matrix vector and use it unless it's a COFFICIENT_UNCHANGED
                 for (int col = 0; col < matrixHeight_; col++) {
                     for (int row = 0; row < matrixWidth_; row++) {
-                        if (coefficientMatrix[row][col] != COEFFICIENT_UNCHANGED) {
+                        if (coefficientMatrix[row][col] != COFFICIENT_UNCHANGED) {
     #ifdef NARROW_DATA_STORES
                             assert(coefficientMatrix[row][col] >= SHRT_MIN && coefficientMatrix[row][col] <= SHRT_MAX);
     #endif
@@ -199,10 +199,10 @@ namespace nddi {
 
                 // Update coefficient matrix in coefficient plane at position
                 if (!costModel_->isHeadless()) {
-                    // Examine each coefficient in the coefficient matrix vector and use it unless it's a COEFFICIENT_UNCHANGED
+                    // Examine each coefficient in the coefficient matrix vector and use it unless it's a COFFICIENT_UNCHANGED
                     for (int col = 0; col < matrixHeight_; col++) {
                         for (int row = 0; row < matrixWidth_; row++) {
-                            if (coefficientMatrix[row][col] != COEFFICIENT_UNCHANGED) {
+                            if (coefficientMatrix[row][col] != COFFICIENT_UNCHANGED) {
         #ifdef NARROW_DATA_STORES
                                 assert(coefficientMatrix[row][col] >= SHRT_MIN && coefficientMatrix[row][col] <= SHRT_MAX);
         #endif

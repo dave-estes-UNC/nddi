@@ -192,13 +192,13 @@ void GlNddiDisplay::ComputePixels(unsigned int x, unsigned int y, unsigned int l
                 // date directly
                 vector<unsigned int> location;
                 if (doCostCalculation) {
-                    if (useSingleCoeffcientPlane_) {
+                    if (useSingleCoefficientPlane_) {
                         location.push_back(x); location.push_back(y); location.push_back(0);
                     } else {
                         location.push_back(x); location.push_back(y); location.push_back(p);
                     }
                 } else {
-                    if (useSingleCoeffcientPlane_) {
+                    if (useSingleCoefficientPlane_) {
                         cmd = coefficientPlanes_->dataCoefficient(x, y, 0);
                     } else {
                         cmd = coefficientPlanes_->dataCoefficient(x, y, p);

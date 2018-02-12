@@ -143,10 +143,10 @@ namespace nddi {
             assert(!useSingleCoefficientPlane_ || location[2] == 0);
 
             if (!costModel_->isHeadless()) {
-                // Examine each coefficient in the coefficient matrix vector and use it unless it's a COFFICIENT_UNCHANGED
+                // Examine each coefficient in the coefficient matrix vector and use it unless it's a COEFFICIENT_UNCHANGED
                 for (int col = 0; col < matrixHeight_; col++) {
                     for (int row = 0; row < matrixWidth_; row++) {
-                        if (coefficientMatrix[row][col] != COFFICIENT_UNCHANGED) {
+                        if (coefficientMatrix[row][col] != COEFFICIENT_UNCHANGED) {
     #ifdef NARROW_DATA_STORES
                             assert(coefficientMatrix[row][col] >= SHRT_MIN && coefficientMatrix[row][col] <= SHRT_MAX);
     #endif
@@ -181,7 +181,9 @@ namespace nddi {
             assert(end[2] < numPlanes_);
             assert(coefficientMatrix.size() == matrixWidth_);
             assert(coefficientMatrix[0].size() == matrixHeight_);
-            assert(!useSingleCoefficientPlane_ || (start[2] == 0 && end[2] == 0));
+            // Note: Unlike the other routines, this one doesn't assert for planes >0 when using useSingleCoefficientPlane_.
+            //       Instead it handles those planes for purposes of cost model calculations without actually updating memory.
+            // assert(!useSingleCoefficientPlane_ || (start[2] == 0 && end[2] == 0));
 
             vector<unsigned int> position = start;
             bool fillFinished = false;
@@ -197,15 +199,18 @@ namespace nddi {
 
                 // Update coefficient matrix in coefficient plane at position
                 if (!costModel_->isHeadless()) {
-                    // Examine each coefficient in the coefficient matrix vector and use it unless it's a COFFICIENT_UNCHANGED
+                    // Examine each coefficient in the coefficient matrix vector and use it unless it's a COEFFICIENT_UNCHANGED
                     for (int col = 0; col < matrixHeight_; col++) {
                         for (int row = 0; row < matrixWidth_; row++) {
-                            if (coefficientMatrix[row][col] != COFFICIENT_UNCHANGED) {
+                            if (coefficientMatrix[row][col] != COEFFICIENT_UNCHANGED) {
         #ifdef NARROW_DATA_STORES
                                 assert(coefficientMatrix[row][col] >= SHRT_MIN && coefficientMatrix[row][col] <= SHRT_MAX);
         #endif
                                 Coeff * cm = dataCoefficient(position[0], position[1], position[2]);
-                                cm[col * matrixWidth_ + row] = coefficientMatrix[row][col];
+                                // Only physically update the coefficientes on plane zero when using useSingleCoefficientPlane_
+                                if (!useSingleCoefficientPlane_ || (position[2] == 0)) {
+                                    cm[col * matrixWidth_ + row] = coefficientMatrix[row][col];
+                                }
                                 costModel_->registerMemoryCharge(COEFFICIENT_PLANE_COMPONENT, WRITE_ACCESS, &cm[col * matrixWidth_ + row], BYTES_PER_COEFF, 0);
                             }
                         }
@@ -266,7 +271,9 @@ namespace nddi {
 #ifdef NARROW_DATA_STORES
             assert(coefficient >= SHRT_MIN && coefficient <= SHRT_MAX);
 #endif
-            assert(!useSingleCoefficientPlane_ || (start[2] == 0 && end[2] == 0));
+            // Note: Unlike the other routines, this one doesn't assert for planes >0 when using useSingleCoefficientPlane_.
+            //       Instead it handles those planes for purposes of cost model calculations without actually updating memory.
+            // assert(!useSingleCoefficientPlane_ || (start[2] == 0 && end[2] == 0));
 
             vector<unsigned int> position = start;
             bool fillFinished = false;
@@ -283,7 +290,10 @@ namespace nddi {
                 // Set coefficient in the coefficient matrix at this position in the coefficient plane
                 if (!costModel_->isHeadless()) {
                     Coeff* cm = dataCoefficient(position[0], position[1], position[2]);
-                    cm[row * matrixWidth_ + col] = coefficient;
+                    // Only physically update the coefficientes on plane zero when using useSingleCoefficientPlane_
+                    if (!useSingleCoefficientPlane_ || (position[2] == 0)) {
+                        cm[row * matrixWidth_ + col] = coefficient;
+                    }
                     costModel_->registerMemoryCharge(COEFFICIENT_PLANE_COMPONENT, WRITE_ACCESS, &cm[row * width_ + col], BYTES_PER_COEFF, 0);
                     if (MB_FACTOR > 1) {
                         // Make a bulk charge for the other scalers in the macroblock

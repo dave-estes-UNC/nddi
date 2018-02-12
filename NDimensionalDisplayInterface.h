@@ -16,7 +16,7 @@ namespace nddi {
      * can use this value for one or more of the elements in the matrix if they would like the element in the
      * same location of the destination coefficient matrix to remain unchanged.
      */
-    #define COFFICIENT_UNCHANGED INT16_MAX
+    #define COEFFICIENT_UNCHANGED INT16_MAX
 
     /**
      * Used for a coefficient to indicate that the coefficient's value is fixed to either the
@@ -231,7 +231,7 @@ namespace nddi {
          *
          * @param coefficientMatrix This two-dimensional vector holds the matrix to be copied.
          *                          It's size must match the configuration of the coefficient matrices
-         *                          exactly. Can use COFFICIENT_UNCHANGED for one or more elements.
+         *                          exactly. Can use COEFFICIENT_UNCHANGED for one or more elements.
          * @param location This two-element vector specifies the location in the coefficient plane where the provided
          *                 coefficient matrix will be copied.
          */
@@ -242,7 +242,7 @@ namespace nddi {
          *
          * @param coefficientMatrix This two-dimensional vector holds the matrix to be copied.
          *                          It's size must match the configuration of the coefficient matrices
-         *                          exactly. Can use COFFICIENT_UNCHANGED for one or more elements.
+         *                          exactly. Can use COEFFICIENT_UNCHANGED for one or more elements.
          * @param start This three-element vector specifies the location in the coefficient planes where the first
          *              coefficient matrix will be copied to.
          * @param end This three-element vector specifies the location in the coefficient planes where the last

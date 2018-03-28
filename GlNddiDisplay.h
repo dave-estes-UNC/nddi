@@ -36,6 +36,7 @@ public:
      * @return Texture holding a rendered frame.
      */
     GLuint GetFrameBufferTex();
+    GLuint GetFrameBufferTex(unsigned int sub_x, unsigned int sub_y, unsigned int sub_w, unsigned int sub_h);
 
     /**
      * Use to register in bulk all of the rendering cost. This will updates the counts correctly,
@@ -50,6 +51,7 @@ public:
 
 private:
     void Render();
+    void Render(unsigned int sub_x, unsigned int sub_y, unsigned int sub_w, unsigned int sub_h);
     void ComputePixels(unsigned int x, unsigned int y, unsigned int length, bool doCostCalculation);
     void RegisterBulkRenderCost();
 

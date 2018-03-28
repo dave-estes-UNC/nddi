@@ -206,8 +206,10 @@ namespace nddi {
         #ifdef NARROW_DATA_STORES
                                 assert(coefficientMatrix[row][col] >= SHRT_MIN && coefficientMatrix[row][col] <= SHRT_MAX);
         #endif
-                                Coeff * cm = dataCoefficient(position[0], position[1], position[2]);
-                                // Only physically update the coefficientes on plane zero when using useSingleCoefficientPlane_
+                                Coeff * cm = !useSingleCoefficientPlane_ ?
+                                        dataCoefficient(position[0], position[1], position[2]) :
+                                        dataCoefficient(position[0], position[1], 0);
+                                // Only physically update the coefficients on plane zero when using useSingleCoefficientPlane_
                                 if (!useSingleCoefficientPlane_ || (position[2] == 0)) {
                                     cm[col * matrixWidth_ + row] = coefficientMatrix[row][col];
                                 }
@@ -289,8 +291,10 @@ namespace nddi {
 
                 // Set coefficient in the coefficient matrix at this position in the coefficient plane
                 if (!costModel_->isHeadless()) {
-                    Coeff* cm = dataCoefficient(position[0], position[1], position[2]);
-                    // Only physically update the coefficientes on plane zero when using useSingleCoefficientPlane_
+                    Coeff * cm = !useSingleCoefficientPlane_ ?
+                            dataCoefficient(position[0], position[1], position[2]) :
+                            dataCoefficient(position[0], position[1], 0);
+                    // Only physically update the coefficients on plane zero when using useSingleCoefficientPlane_
                     if (!useSingleCoefficientPlane_ || (position[2] == 0)) {
                         cm[row * matrixWidth_ + col] = coefficient;
                     }

@@ -103,6 +103,10 @@ GlNddiDisplay::~GlNddiDisplay() {
 // Private
 
 void GlNddiDisplay::Render() {
+    Render(0, 0, displayWidth_, displayHeight_);
+}
+
+void GlNddiDisplay::Render(unsigned int sub_x, unsigned int sub_y, unsigned int sub_w, unsigned int sub_h) {
 
     timeval startTime, endTime; // Used for timing data
     if (!quiet_)
@@ -113,8 +117,8 @@ void GlNddiDisplay::Render() {
     doCostCalculation = false;
 #pragma omp parallel for
 #endif // !NO_OMP
-    for (unsigned int y = 0; y < displayHeight_; y += 8) {
-        for (unsigned int x = 0; x < displayWidth_; x += 8) {
+    for (unsigned int y = sub_y; y < (sub_y + sub_h); y += 8) {
+        for (unsigned int x = sub_x; x < (sub_x + sub_w); x += 8) {
             ComputePixels(x, y, 8, doCostCalculation);
         }
     }
@@ -301,10 +305,14 @@ void GlNddiDisplay::ComputePixels(unsigned int x, unsigned int y, unsigned int l
 }
 
 GLuint GlNddiDisplay::GetFrameBufferTex() {
+    return GetFrameBufferTex(0, 0, displayWidth_, displayHeight_);
+}
+
+GLuint GlNddiDisplay::GetFrameBufferTex(unsigned int sub_x, unsigned int sub_y, unsigned int sub_w, unsigned int sub_h) {
 
 #ifdef SUPRESS_EXCESS_RENDERING
     if (changed_)
-        Render();
+        Render(sub_x, sub_y, sub_w, sub_h);
 #endif
 
 // TODO(CDE): Temporarily putting this here until GlNddiDisplay and ClNddiDisplay
@@ -375,7 +383,6 @@ void GlNddiDisplay::SimulateRender() {
 }
 
 Pixel* GlNddiDisplay::GetFrameBuffer() {
-
 #ifdef SUPRESS_EXCESS_RENDERING
     if (changed_)
         Render();

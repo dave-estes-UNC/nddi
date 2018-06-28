@@ -14,10 +14,8 @@
 
 
 /*
- * Running make with NO_HACKS=1 should turn these off if using the Makefile for Linux,
- * but uncommenting these will accomplish the same thing. And in OS X it's the only way
- * since these hacks are hardcoded in the project for lack of recent Makefile support
- * for OS X.
+ * Running cmake with -DHACKS=off should turn these off if using the Makefile for Linux,
+ * but uncommenting these will accomplish the same thing.
  */
 //#undef SUPRESS_EXCESS_RENDERING
 //#undef SKIP_COMPUTE_WHEN_SCALER_ZERO

@@ -20,6 +20,14 @@ using namespace std;
  */
 class BlendingGlNddiDisplay : public GlNddiDisplay, public NDimensionalDisplayInterfaceExtended {
 
+protected:
+
+    /**
+     * Renders each pixel of the frame buffer by setting the x, y in the input vector and computing which
+     * frame volume pixel to use.
+     */
+    virtual void Render() = 0;
+
 public:
     BlendingGlNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                           unsigned int numCoefficientPlanes, unsigned int inputVectorSize,

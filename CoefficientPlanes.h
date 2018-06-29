@@ -123,9 +123,8 @@ namespace nddi {
             assert(location[2] < numPlanes_);
             assert(row < matrixWidth_);
             assert(col < matrixHeight_);
-            assert(!useSingleCoefficientPlane_ || location[2] == 0);
 
-            Coeff *cm = dataCoefficient(location[0], location[1], location[2]);
+            Coeff *cm = dataCoefficient(location[0], location[1], useSingleCoefficientPlane_ ? 0 : location[2]);
             costModel_->registerMemoryCharge(COEFFICIENT_PLANE_COMPONENT, READ_ACCESS, &cm[col * matrixWidth_ + row], BYTES_PER_COEFF, 0);
 
             return CheckSpecialCoefficient(cm[col * matrixWidth_ + row], location[2]);

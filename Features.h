@@ -1,21 +1,18 @@
 #ifndef NDDIFEATURES_H_
 #define NDDIFEATURES_H_
 
-/*
- * These features are all on by default. Uncomment a line (and cross fingers) to turn one off.
- */
+// Debugging is very hard with OpenMP enabled.
 #ifdef DEBUG
-#define NO_OMP
+#undef USE_OMP
 #endif
 
-//#define NO_OMP
 //#define NO_GL
 #define NO_CL
 
 
 /*
- * Running cmake with -DNO_HACKS=on ... should turn these off, but uncommenting
- * these will accomplish the same thing.
+ * Running cmake with -DHACKS=off ... should turn these off, but uncommenting
+ * these will accomplish the same thing individually.
  */
 //#undef SUPRESS_EXCESS_RENDERING
 //#undef SKIP_COMPUTE_WHEN_SCALER_ZERO

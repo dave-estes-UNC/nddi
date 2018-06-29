@@ -113,10 +113,10 @@ void GlNddiDisplay::Render(unsigned int sub_x, unsigned int sub_y, unsigned int 
         gettimeofday(&startTime, NULL);
 
     bool doCostCalculation = true;
-#ifndef NO_OMP
+#ifdef USE_OMP
     doCostCalculation = false;
 #pragma omp parallel for
-#endif // !NO_OMP
+#endif
     for (unsigned int y = sub_y; y < (sub_y + sub_h); y += 8) {
         for (unsigned int x = sub_x; x < (sub_x + sub_w); x += 8) {
             ComputePixels(x, y, 8, doCostCalculation);
@@ -125,7 +125,7 @@ void GlNddiDisplay::Render(unsigned int sub_x, unsigned int sub_y, unsigned int 
 
     // Update the cost model for the in bulk now if we are using OpenMP since we bypassed the traditional
     // getters for input vector, frame volume, and coefficient matrix in ComputePixel
-#ifndef NO_OMP
+#ifdef USE_OMP
     RegisterBulkRenderCost();
 #endif
 
@@ -196,11 +196,7 @@ void GlNddiDisplay::ComputePixels(unsigned int x, unsigned int y, unsigned int l
                 // date directly
                 vector<unsigned int> location;
                 if (doCostCalculation) {
-                    if (useSingleCoefficientPlane_) {
-                        location.push_back(x); location.push_back(y); location.push_back(0);
-                    } else {
-                        location.push_back(x); location.push_back(y); location.push_back(p);
-                    }
+                    location.push_back(x); location.push_back(y); location.push_back(p);
                 } else {
                     if (useSingleCoefficientPlane_) {
                         cmd = coefficientPlanes_->dataCoefficient(x, y, 0);

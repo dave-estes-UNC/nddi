@@ -14,8 +14,8 @@
 
 
 /*
- * Running cmake with -DHACKS=off should turn these off if using the Makefile for Linux,
- * but uncommenting these will accomplish the same thing.
+ * Running cmake with -DNO_HACKS=on ... should turn these off, but uncommenting
+ * these will accomplish the same thing.
  */
 //#undef SUPRESS_EXCESS_RENDERING
 //#undef SKIP_COMPUTE_WHEN_SCALER_ZERO
@@ -32,9 +32,10 @@
 #define USE_ALPHA_CHANNEL
 
 /*
- * Use the narrowed data fields instead of 4-byte words for EVERYTHING.
+ * For cost model calculations, use the narrowed data fields instead of 4-byte words for
+ * EVERYTHING. This doesn't affect any data stores or calculations.
  */
-#define USE_NARROW_DATA_FIELDS
+#define COST_MODEL_USE_NARROW_DATA_FIELDS
 
 /*
  * Uses the nDDI extension to update groups of tiles
@@ -42,7 +43,10 @@
 #define USE_COPY_PIXEL_TILES
 
 /*
- * Used to dramatically narrow the various data stores. Can lead to bugs, so proceed carefully.
+ * Used to dramatically narrow the various data stores. Can lead to bugs, so proceed
+ * carefully. For instance, coefficients are 4 bytes by design, but this flag will
+ * reduce them to two bytes. If the use case needs a coefficient beyond 2 bytes, then
+ * there's likely going to be an unguarded overflow.
  */
 #define NARROW_DATA_STORES
 

@@ -33,6 +33,16 @@ public:
     // To satisfy the NDimensionalDisplayInterfaceExtended interface
     void CopyFrameVolume(vector<unsigned int> &start, vector<unsigned int> &end, vector<unsigned int> &dest, bool blend);
 
+#ifndef SUPRESS_EXCESS_RENDERING
+protected:
+
+    /**
+     * Renders each pixel of the frame buffer by setting the x, y in the input vector and computing which
+     * frame volume pixel to use.
+     */
+    virtual void Render() = 0;
+#endif
+
 private:
     nddi::Pixel BlendPixel(nddi::Pixel pTo, nddi::Pixel pFrom);
 

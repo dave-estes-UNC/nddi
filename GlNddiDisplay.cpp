@@ -313,7 +313,7 @@ GLuint GlNddiDisplay::GetFrameBufferTex(unsigned int sub_x, unsigned int sub_y, 
 
 // TODO(CDE): Temporarily putting this here until GlNddiDisplay and ClNddiDisplay
 //            are using the exact same kind of GL textures
-#ifdef NO_CL
+#ifndef USE_CL
     // select our current texture
     glBindTexture( GL_TEXTURE_2D, texture_ );
 

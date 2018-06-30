@@ -6,9 +6,6 @@
 #undef USE_OMP
 #endif
 
-//#define NO_GL
-#define NO_CL
-
 
 /*
  * Running cmake with -DHACKS=off ... should turn these off, but uncommenting

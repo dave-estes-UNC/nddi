@@ -102,7 +102,7 @@ public:
             cout << __FUNCTION__ << " - Failed to create enqueue write buffer command." << endl;
         }
 
-        costModel_->registerMemoryCharge(FRAME_VOLUME_COMPONENT, WRITE_ACCESS, NULL, 4, 0);
+        costModel_->registerFrameVolumeMemoryCharge(WRITE_ACCESS, location, location);
     }
 
     // TODO(CDE): move to buffer writes in 3 dimensions. Consider not even supporting strips in any other dimensions
@@ -161,7 +161,7 @@ public:
         }
 
         // Register memory charge
-        costModel_->registerMemoryCharge(FRAME_VOLUME_COMPONENT, WRITE_ACCESS, NULL, 4 * stripLength, 0);
+        costModel_->registerFrameVolumeMemoryCharge(WRITE_ACCESS, start, end);
     }
 
     void CopyPixels(Pixel* p, vector<unsigned int> &start, vector<unsigned int> &end) {
@@ -276,7 +276,7 @@ public:
         } while (!copyFinished);
 
         // Register memory charge
-        costModel_->registerMemoryCharge(FRAME_VOLUME_COMPONENT, WRITE_ACCESS, NULL, 4 * pixelsCopied, time);
+        costModel_->registerFrameVolumeMemoryCharge(WRITE_ACCESS, start, end);
     }
 
     // TODO(CDE): Since I use clEnqueueCopyBufferRect below, I can't support frame volumes with
@@ -286,7 +286,6 @@ public:
         unsigned int *             packetPtr = (unsigned int *)packet_;
         size_t                     packetWordCount = 0;
         size_t                     tileSize = size[0] * size[1];
-        size_t                     pixelsCopied = 0;
         cl_event *                 pEvent = NULL;
 
         // Then for each tile...
@@ -303,7 +302,17 @@ public:
             // overlap when registering a memory charge.
             size_t w = (starts[i][0] + size[0] < dimensionalSizes_[0]) ? size[0] : dimensionalSizes_[0] - starts[i][0];
             size_t h = (starts[i][1] + size[1] < dimensionalSizes_[1]) ? size[1] : dimensionalSizes_[1] - starts[i][1];
-            pixelsCopied += w * h;
+
+            // Register memory charge for this tile
+            vector<unsigned int> end;
+            for (int j = 0; j < starts[i].size; j++) {
+                if (j < size.size()) {
+                    end.push_back(starts[i][j] + size[j] - 1);
+                } else {
+                    end.push_back(starts[i][j]);
+                }
+            }
+            costModel_->registerFrameVolumeMemoryCharge(WRITE_ACCESS, starts[i]);
         }
 
 #ifdef CL_PROFILING_ENABLED
@@ -384,9 +393,6 @@ public:
         // Register NDDI link charge for time
         costModel_->registerTransmissionCharge(0, (unsigned long)(endTime - startTime));
 #endif
-
-        // Register memory charge
-        costModel_->registerMemoryCharge(FRAME_VOLUME_COMPONENT, WRITE_ACCESS, NULL, 4 * pixelsCopied, 0);
     }
 
     void FillPixel(Pixel p, vector<unsigned int> &start, vector<unsigned int> &end) {
@@ -519,7 +525,7 @@ public:
         } while (!fillFinished);
 
         // Register memory charge
-        costModel_->registerMemoryCharge(FRAME_VOLUME_COMPONENT, WRITE_ACCESS, NULL, 4 * pixelsFilled, time);
+        costModel_->registerFrameVolumeMemoryCharge(WRITE_ACCESS, start, end);
     }
 
     // TODO(CDE): Implement for CL
@@ -555,7 +561,15 @@ public:
 
         } while (!copyFinished);
 
-        // Enqueue CL commands
+        // TODO(CDE): Enqueue CL commands
+        assert(false);
+
+        costModel_->registerFrameVolumeMemoryCharge(READ_ACCESS, start, end);
+        vector<unsigned int> destEnd;
+        for (int i = 0; i < dest.size(); i++) {
+            destEnd.push_back(dest[i] + (end[i] - start[i]));
+        }
+        costModel_->registerFrameVolumeMemoryCharge(WRITE_ACCESS, dest, destEnd);
     }
 
     cl_mem initializeCl(cl_context context, cl_command_queue queue) {

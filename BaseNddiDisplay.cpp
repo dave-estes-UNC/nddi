@@ -24,7 +24,7 @@ BaseNddiDisplay::BaseNddiDisplay() :
 
 BaseNddiDisplay::BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                                  unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                                 bool headless, bool fixed8x8Macroblocks, bool useSingleCoeffcientPlane) :
+                                 bool headless, bool logcosts, bool fixed8x8Macroblocks, bool useSingleCoeffcientPlane) :
         displayWidth_(0),
         displayHeight_(0),
         numPlanes_(numCoefficientPlanes),
@@ -42,7 +42,7 @@ BaseNddiDisplay::BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSiz
 BaseNddiDisplay::BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                                  unsigned int displayWidth, unsigned int displayHeight,
                                  unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                                 bool headless, bool fixed8x8Macroblocks, bool useSingleCoeffcientPlane) :
+                                 bool headless, bool logcosts, bool fixed8x8Macroblocks, bool useSingleCoeffcientPlane) :
         displayWidth_(displayWidth),
         displayHeight_(displayHeight),
         numPlanes_(numCoefficientPlanes),
@@ -160,7 +160,7 @@ void BaseNddiDisplay::CopyPixelTiles(vector<Pixel*> &p, vector<vector<unsigned i
 
     // Copy pixels
     vector<unsigned int> end;
-    end.resize(size.size());
+    end.resize(frameVolumeDimensionalSizes_.size());
     for (int i = 0; i < starts.size(); i++) {
         assert(starts[i].size() == frameVolumeDimensionalSizes_.size());
         end[0] = starts[i][0] + size[0]- 1; if (end[0] >= frameVolumeDimensionalSizes_[0]) end[0] = frameVolumeDimensionalSizes_[0] - 1;

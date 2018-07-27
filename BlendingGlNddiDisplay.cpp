@@ -27,7 +27,7 @@ using namespace nddi;
 
 BlendingGlNddiDisplay::BlendingGlNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                                              unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                                             bool headless)
+                                             bool headless, bool logcosts)
 : GlNddiDisplay(frameVolumeDimensionalSizes, numCoefficientPlanes, inputVectorSize)
 {
 }
@@ -35,7 +35,7 @@ BlendingGlNddiDisplay::BlendingGlNddiDisplay(vector<unsigned int> &frameVolumeDi
 BlendingGlNddiDisplay::BlendingGlNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                                              unsigned int displayWidth, unsigned int displayHeight,
                                              unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                                             bool headless)
+                                             bool headless, bool logcosts)
 : GlNddiDisplay(frameVolumeDimensionalSizes, displayWidth, displayHeight, numCoefficientPlanes, inputVectorSize)
 {
 }

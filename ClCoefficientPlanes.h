@@ -86,7 +86,7 @@ public:
 
         for (int y = 0; y < matrixHeight_; y++) {
             for (int x = 0; x < matrixWidth_; x++) {
-                if (coefficientMatrix[x][y] != COFFICIENT_UNCHANGED) {
+                if (coefficientMatrix[x][y] != COEFFICIENT_UNCHANGED) {
                     *coefficientPtr = coefficientMatrix[x][y];
                 }
                 assert(0); // TODO(CDE): Shouldn't coefficientPtr be moved to the next coefficient?
@@ -103,9 +103,7 @@ public:
             cout << __FUNCTION__ << " - Failed to create enqueue write buffer command." << endl;
         }
 
-        // Update Cost Model
-        costModel_->registerMemoryCharge(COEFFICIENT_PLANE_COMPONENT, READ_ACCESS, coefficients_ + offset, matrixSize_, 0);
-        costModel_->registerMemoryCharge(COEFFICIENT_PLANE_COMPONENT, WRITE_ACCESS, coefficients_ + offset, matrixSize_, 0);
+        costModel_->registerCoefficientMatrixMemoryCharge(WRITE_ACCESS, location, location, coefficientMatrix);
     }
 
     void FillCoefficientMatrix(vector< vector<int> > &coefficientMatrix,
@@ -134,7 +132,7 @@ public:
                     offset = calcOffset(position);
                     for (int y = 0; y < matrixHeight_; y++) {
                         for (int x = 0; x < matrixWidth_; x++) {
-                            if (coefficientMatrix[x][y] != COFFICIENT_UNCHANGED) {
+                            if (coefficientMatrix[x][y] != COEFFICIENT_UNCHANGED) {
                                 coefficients_[offset] = coefficientMatrix[x][y];
                             }
                             offset++;
@@ -158,9 +156,7 @@ public:
             cout << __FUNCTION__ << " - Err: (" << err << ") - Failed to create enqueue write buffer rect command." << endl;
         }
 
-        // Update Cost Model
-        costModel_->registerMemoryCharge(COEFFICIENT_PLANE_COMPONENT, READ_ACCESS, coefficients_ + calcOffset(start), matrixSize_* stride * rowCount * planeCount, 0);
-        costModel_->registerMemoryCharge(COEFFICIENT_PLANE_COMPONENT, WRITE_ACCESS, coefficients_ + calcOffset(start), matrixSize_* stride * rowCount * planeCount, 0);
+        costModel_->registerCoefficientMatrixMemoryCharge(WRITE_ACCESS, start, end, coefficientMatrix);
     }
 
     void FillCoefficient(int coefficient,
@@ -209,8 +205,7 @@ public:
         }
 
         // Update Cost Model
-        costModel_->registerMemoryCharge(COEFFICIENT_PLANE_COMPONENT, READ_ACCESS, coefficients_ + calcOffset(start), coefficientSize_* stride * rowCount * planeCount, 0);
-        costModel_->registerMemoryCharge(COEFFICIENT_PLANE_COMPONENT, WRITE_ACCESS, coefficients_ + calcOffset(start), coefficientSize_* stride * rowCount * planeCount, 0);
+        costModel_->registerCoefficientMemoryCharge(WRITE_ACCESS, start, end, row, col);
     }
 
     void FillScaler(Scaler scaler,
@@ -258,9 +253,7 @@ public:
             cout << __FUNCTION__ <<  " - Err: (" << err << ") - Failed to create enqueue write buffer rect command." << endl;
         }
 
-        // Update Cost Model
-        costModel_->registerMemoryCharge(COEFFICIENT_PLANE_COMPONENT, READ_ACCESS, scalers_, scalerSize_* stride * rowCount * planeCount, 0);
-        costModel_->registerMemoryCharge(COEFFICIENT_PLANE_COMPONENT, WRITE_ACCESS, scalers_, scalerSize_* stride * rowCount * planeCount, 0);
+        costModel_->registerScalerMemoryCharge(WRITE_ACCESS, start, end);
     }
 
     cl_mem initializeCl(cl_context context, cl_command_queue queue) {

@@ -60,14 +60,8 @@ namespace nddi {
         void PutPixel(Pixel p, vector<unsigned int> &location) {
             if (!costModel_->isHeadless()) {
                 setPixel(location, p);
-            } else {
-                costModel_->registerBulkMemoryCharge(FRAME_VOLUME_COMPONENT,
-                                                     1,
-                                                     WRITE_ACCESS,
-                                                     NULL,
-                                                     1 * BYTES_PER_PIXEL,
-                                                     0);
             }
+            costModel_->registerFrameVolumeMemoryCharge(WRITE_ACCESS, location, location);
         }
 
         void CopyPixelStrip(Pixel* p, vector<unsigned int> &start, vector<unsigned int> &end) {
@@ -88,14 +82,9 @@ namespace nddi {
                     setPixel(position, p[j]);
                     position[dimensionToCopyAlong]++;
                 }
-            } else {
-                costModel_->registerBulkMemoryCharge(FRAME_VOLUME_COMPONENT,
-                                                     end[dimensionToCopyAlong] - start[dimensionToCopyAlong] + 1,
-                                                     WRITE_ACCESS,
-                                                     NULL,
-                                                     (end[dimensionToCopyAlong] - start[dimensionToCopyAlong] + 1) * BYTES_PER_PIXEL,
-                                                     0);
             }
+
+            costModel_->registerFrameVolumeMemoryCharge(WRITE_ACCESS, start, end);
         }
 
         void CopyPixels(Pixel* p, vector<unsigned int> &start, vector<unsigned int> &end) {
@@ -128,13 +117,7 @@ namespace nddi {
 
             } while (!copyFinished);
 
-            if (costModel_->isHeadless())
-                costModel_->registerBulkMemoryCharge(FRAME_VOLUME_COMPONENT,
-                                                     pixelsCopied,
-                                                     WRITE_ACCESS,
-                                                     NULL,
-                                                     pixelsCopied * BYTES_PER_PIXEL,
-                                                     0);
+            costModel_->registerFrameVolumeMemoryCharge(WRITE_ACCESS, start, end);
         }
 
         void FillPixel(Pixel p, vector<unsigned int> &start, vector<unsigned int> &end) {
@@ -167,14 +150,7 @@ namespace nddi {
 
             } while (!fillFinished);
 
-            if (costModel_->isHeadless())
-                costModel_->registerBulkMemoryCharge(FRAME_VOLUME_COMPONENT,
-                                                     pixelsFilled,
-                                                     WRITE_ACCESS,
-                                                     NULL,
-                                                     pixelsFilled * BYTES_PER_PIXEL,
-                                                     0);
-
+            costModel_->registerFrameVolumeMemoryCharge(WRITE_ACCESS, start, end);
         }
 
         void CopyFrameVolume(vector<unsigned int> &start, vector<unsigned int> &end, vector<unsigned int> &dest) {
@@ -210,14 +186,12 @@ namespace nddi {
 
             } while (!copyFinished);
 
-            if (costModel_->isHeadless())
-                costModel_->registerBulkMemoryCharge(FRAME_VOLUME_COMPONENT,
-                                                     pixelsCopied,
-                                                     WRITE_ACCESS,
-                                                     NULL,
-                                                     pixelsCopied * BYTES_PER_PIXEL,
-                                                     0);
-
+            costModel_->registerFrameVolumeMemoryCharge(READ_ACCESS, start, end);
+            vector<unsigned int> destEnd;
+            for (int i = 0; i < dest.size(); i++) {
+                destEnd.push_back(dest[i] + (end[i] - start[i]));
+            }
+            costModel_->registerFrameVolumeMemoryCharge(WRITE_ACCESS, dest, destEnd);
         }
 
         void setPixel(vector<unsigned int> &location, Pixel pixel) {
@@ -236,8 +210,6 @@ namespace nddi {
             }
 
             pixels_[offset].packed = pixel.packed;
-
-            costModel_->registerMemoryCharge(FRAME_VOLUME_COMPONENT, WRITE_ACCESS, pixels_ + offset, BYTES_PER_PIXEL, 0);
         }
 
         Pixel getPixel(vector<unsigned int> &location) {
@@ -257,8 +229,6 @@ namespace nddi {
             }
 
             pixel.packed = pixels_[offset].packed;
-
-            costModel_->registerMemoryCharge(FRAME_VOLUME_COMPONENT, READ_ACCESS, pixels_ + offset, BYTES_PER_PIXEL, 0);
 
             return pixel;
         }

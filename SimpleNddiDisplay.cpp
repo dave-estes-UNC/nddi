@@ -43,15 +43,15 @@ inline uint8_t TRUNCATE_BYTE(int32_t i) {
 
 SimpleNddiDisplay::SimpleNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                              unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                             bool headless, bool fixed8x8Macroblocks, bool useSingleCoeffcientPlane) {
+                             bool headless, bool logcosts, bool fixed8x8Macroblocks, bool useSingleCoeffcientPlane) {
     SimpleNddiDisplay(frameVolumeDimensionalSizes, 320, 240, numCoefficientPlanes, inputVectorSize);
 }
 
 SimpleNddiDisplay::SimpleNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                              unsigned int displayWidth, unsigned int displayHeight,
                              unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                             bool headless, bool fixed8x8Macroblocks, bool useSingleCoeffcientPlane)
-: BaseNddiDisplay(frameVolumeDimensionalSizes, displayWidth, displayHeight, numCoefficientPlanes, inputVectorSize, headless, fixed8x8Macroblocks, useSingleCoeffcientPlane) {
+                             bool headless, bool logcosts, bool fixed8x8Macroblocks, bool useSingleCoeffcientPlane)
+: BaseNddiDisplay(frameVolumeDimensionalSizes, displayWidth, displayHeight, numCoefficientPlanes, inputVectorSize, headless, logcosts, fixed8x8Macroblocks, useSingleCoeffcientPlane) {
 
     numPlanes_ = numCoefficientPlanes;
     frameVolumeDimensionalSizes_ = frameVolumeDimensionalSizes;
@@ -61,7 +61,7 @@ SimpleNddiDisplay::SimpleNddiDisplay(vector<unsigned int> &frameVolumeDimensiona
     quiet_ = true;
 
     // Create the CostModel
-    costModel = new CostModel(headless);
+    costModel = new CostModel(headless, logcosts);
 
     // Setup Input Vector
     inputVector_ = new InputVector(costModel, inputVectorSize);
@@ -81,6 +81,8 @@ SimpleNddiDisplay::SimpleNddiDisplay(vector<unsigned int> &frameVolumeDimensiona
 
     // Set the full scaler and the accumulator
     SetFullScaler(DEFAULT_FULL_SCALER);
+
+    emptyCoefficientMatrix.resize(inputVectorSize, std::vector<int>(frameVolumeDimensionalSizes.size(), 0));
 }
 
 // TODO(CDE): Why is the destructor for SimpleNddiDisplay being called when we're using a ClNddiDisplay?
@@ -147,98 +149,62 @@ void SimpleNddiDisplay::ComputePixels(unsigned int x, unsigned int y, unsigned i
     unsigned int  startx = x, starty = y;
     bool          fixed = fixed8x8Macroblocks_ && length == 8;
 
-    // When not computing the cost per pixel, don't use the setters and getters for
-    // InputVector, FrameVolume, and CoefficientPlanes. Instead use their data directly.
-    int     *ivd;
-    Pixel   *fvd;
-#ifdef NARROW_DATA_STORES
-    int16_t *sd;
-#else
-    int     *sd;
-#endif
-    Coeff   *cmd;
-    if (!doCostCalculation) {
-        ivd = inputVector_->data();
-        fvd = frameVolume_->data();
-    }
+
+    // Current location in the coefficient planes (x, y, p)
+    vector<unsigned int> location(3, 0);
 
     for (y = starty; y < starty + length && y < displayHeight_; y++) {
+        location[1] = y;
         for (x = startx; x < startx + length && x < displayWidth_; x++) {
+            location[0] = x;
             rAccumulator = gAccumulator = bAccumulator = 0;
             q.packed = 0;
 
             // Accumulate color channels for the pixels chosen by each plane
             for (unsigned int p = 0; p < numPlanes_; p++) {
+                location[2] = p;
 
                 // Grab the scaler for this location
                 Scaler scaler;
+                scaler = coefficientPlanes_->getScaler(x, y, p);
                 if (doCostCalculation) {
-                    scaler = coefficientPlanes_->getScaler(x, y, p);
-                } else {
-                    sd = coefficientPlanes_->dataScaler(x, y, p);
-                    scaler.r = sd[0];
-                    scaler.g = sd[1];
-                    scaler.b = sd[2];
-                    scaler.a = 0;
+                    costModel->registerScalerMemoryCharge(READ_ACCESS, location, location);
                 }
+
 #ifdef SKIP_COMPUTE_WHEN_SCALER_ZERO
                 if (scaler.packed == 0) continue;
 #endif
 
-                // Compute the position vector for the proper pixel in the frame volume. Either
-                // grab each coefficient if computing cost, or just access the coefficient matrix
-                // date directly
-                vector<unsigned int> location;
-                if (doCostCalculation) {
-                    location.push_back(x); location.push_back(y); location.push_back(p);
-                } else {
-                    if (useSingleCoefficientPlane_) {
-                        cmd = coefficientPlanes_->dataCoefficient(x, y, 0);
-                    } else {
-                        cmd = coefficientPlanes_->dataCoefficient(x, y, p);
-                    }
-                }
+                // Compute the position vector for the proper pixel in the frame volume.
                 vector<unsigned int> fvPosition;
                 // Matrix multiply the input vector by the coefficient matrix
                 for (int j = 0; j < CM_HEIGHT; j++) {
                     // Initialize to zero
                     fvPosition.push_back(0);
-                    if (doCostCalculation) {
-                        // No need to read the x and y from the input vector, just multiply directly.
-                        fvPosition[j] += coefficientPlanes_->GetCoefficient(location, 0, j) * x;
-                        fvPosition[j] += coefficientPlanes_->GetCoefficient(location, 1, j) * y;
-                        // Then multiply the remainder of the input vector
-                        for (int i = 2; i < CM_WIDTH; i++) {
-                            fvPosition[j] += coefficientPlanes_->GetCoefficient(location, i, j) * inputVector_->getValue(i);
-                        }
-                    } else {
-                        // No need to read the x and y from the input vector, just multiply directly.
-                        fvPosition[j] += coefficientPlanes_->CheckSpecialCoefficient(cmd[j * CM_WIDTH + 0] * x, p);
-                        fvPosition[j] += coefficientPlanes_->CheckSpecialCoefficient(cmd[j * CM_WIDTH + 1] * y, p);
-                        // Then multiply the remainder of the input vector
-                        for (int i = 2; i < CM_WIDTH; i++) {
-                            fvPosition[j] += coefficientPlanes_->CheckSpecialCoefficient(cmd[j * CM_WIDTH + i] * ivd[i], p);
+                    // No need to read the x and y from the input vector, just multiply directly.
+                    fvPosition[j] += coefficientPlanes_->getCoefficient(location, 0, j) * x;
+                    fvPosition[j] += coefficientPlanes_->getCoefficient(location, 1, j) * y;
+                    // Then multiply the remainder of the input vector
+                    for (int i = 2; i < CM_WIDTH; i++) {
+                        fvPosition[j] += coefficientPlanes_->getCoefficient(location, i, j) * inputVector_->getValue(i);
+                    }
+                }
+                if (doCostCalculation) {
+                    costModel->registerCoefficientMatrixMemoryCharge(READ_ACCESS, location, location, emptyCoefficientMatrix);
+                    if (CM_WIDTH > 2) {
+                        for (int j = 0; j < CM_HEIGHT; j++) {
+                            costModel->registerInputVectorMemoryCharge(READ_ACCESS, 2, CM_WIDTH - 1);
                         }
                     }
                 }
 
                 // Grab the pixel from the frame volume
+                q = frameVolume_->getPixel(fvPosition);
                 if (doCostCalculation) {
-                    q = frameVolume_->getPixel(fvPosition);
-                } else {
-                    // Compute the offset and grab the pixel directly from the frame volume
-                    unsigned int offset = 0;
-                    unsigned int multiplier = 1;
-
-                    for (int i = 0; i < fvPosition.size(); i++) {
-                        offset += fvPosition[i] * multiplier;
-                        multiplier *= frameVolumeDimensionalSizes_[i];
-                    }
-
-                    q = fvd[offset];
+                    costModel->registerFrameVolumeMemoryCharge(READ_ACCESS, fvPosition, fvPosition);
                 }
 
-                // Compute tje pixel's contribution and add to the accumulator.
+                // Compute the pixel's contribution and add to the accumulator.
         #ifdef USE_ALPHA_CHANNEL
                 if (pixelSignMode_ == UNSIGNED_MODE) {
                     rAccumulator += (uint8_t)q.r * (uint8_t)q.a * scaler.r;
@@ -300,25 +266,19 @@ void SimpleNddiDisplay::RegisterBulkRenderCost(unsigned int sub_x, unsigned int 
     costModel->registerBulkMemoryCharge(INPUT_VECTOR_COMPONENT,
                                         sub_w * sub_h * numPlanes_ * CM_HEIGHT * (CM_WIDTH - 2),
                                         READ_ACCESS,
-                                        NULL,
-                                        sub_w * sub_h * numPlanes_ * CM_HEIGHT * (CM_WIDTH - 2) * BYTES_PER_IV_VALUE,
-                                        0);
+                                        sub_w * sub_h * numPlanes_ * CM_HEIGHT * (CM_WIDTH - 2) * BYTES_PER_IV_VALUE);
     // For each pixel computed with all of the planes, the coefficient and scaler is read
-    costModel->registerBulkMemoryCharge(COEFFICIENT_PLANE_COMPONENT,
+    costModel->registerBulkMemoryCharge(COEFFICIENT_MATRIX_COMPONENT,
                                         sub_w * sub_h * numPlanes_ * (CM_HEIGHT * CM_WIDTH) +
                                         sub_w * sub_h * numPlanes_ * (1),
                                         READ_ACCESS,
-                                        NULL,
                                         sub_w * sub_h * numPlanes_ * (CM_HEIGHT * CM_WIDTH) * BYTES_PER_COEFF +
-                                        sub_w * sub_h * numPlanes_ * (1) * BYTES_PER_SCALER,
-                                        0);
+                                        sub_w * sub_h * numPlanes_ * (1) * BYTES_PER_SCALER);
     // For each pixel computed with all of the planes, a pixel sample is pulled from the frame volume
     costModel->registerBulkMemoryCharge(FRAME_VOLUME_COMPONENT,
                                         sub_w * sub_h * numPlanes_,
                                         READ_ACCESS,
-                                        NULL,
-                                        sub_w * sub_h * numPlanes_ * BYTES_PER_PIXEL,
-                                        0);
+                                        sub_w * sub_h * numPlanes_ * BYTES_PER_PIXEL);
     costModel->registerPixelMappingCharge(sub_w * sub_h);
 }
 

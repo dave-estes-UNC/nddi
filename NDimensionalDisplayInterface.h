@@ -16,7 +16,7 @@ namespace nddi {
      * can use this value for one or more of the elements in the matrix if they would like the element in the
      * same location of the destination coefficient matrix to remain unchanged.
      */
-    #define COFFICIENT_UNCHANGED INT16_MAX
+    #define COEFFICIENT_UNCHANGED INT16_MAX
 
     /**
      * Used for a coefficient to indicate that the coefficient's value is fixed to either the

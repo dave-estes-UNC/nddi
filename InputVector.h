@@ -59,22 +59,14 @@ namespace nddi {
                 for (int i = 0; (i < input.size()) && ((i + 2) < size_); i++) {
                     setValue(i+2, input[i]);
                 }
-            } else {
-                costModel_->registerBulkMemoryCharge(INPUT_VECTOR_COMPONENT,
-                                                     input.size(),
-                                                     WRITE_ACCESS,
-                                                     NULL,
-                                                     input.size() * BYTES_PER_IV_VALUE,
-                                                     0);
             }
+            costModel_->registerInputVectorMemoryCharge(WRITE_ACCESS, 2, input.size() - 1);
         }
 
         void setValue(unsigned int location, int value) {
 
             assert(location < size_);
             assert(!costModel_->isHeadless());
-
-            costModel_->registerMemoryCharge(INPUT_VECTOR_COMPONENT, WRITE_ACCESS, values_ + location, BYTES_PER_IV_VALUE, 0);
 
             values_[location] = value;
         }
@@ -84,8 +76,6 @@ namespace nddi {
             assert(location > 1);
             assert(location < size_);
             assert(!costModel_->isHeadless());
-
-            costModel_->registerMemoryCharge(INPUT_VECTOR_COMPONENT, READ_ACCESS, values_ + location, BYTES_PER_IV_VALUE, 0);
 
             return values_[location];
         }

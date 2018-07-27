@@ -115,12 +115,12 @@ namespace nddi {
         BaseNddiDisplay();
         BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                         unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                        bool headless = false,
+                        bool headless = false, bool logcosts = false,
                         bool fixed8x8Macroblocks = false, bool useSingleCoeffcientPlane = false);
         BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                         unsigned int displayWidth, unsigned int displayHeight,
                         unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                        bool headless = false,
+                        bool headless = false, bool logcosts = false,
                         bool fixed8x8Macroblocks = false, bool useSingleCoeffcientPlane = false);
         ~BaseNddiDisplay();
         unsigned int DisplayWidth();

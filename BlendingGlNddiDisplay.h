@@ -23,11 +23,11 @@ class BlendingGlNddiDisplay : public GlNddiDisplay, public NDimensionalDisplayIn
 public:
     BlendingGlNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                           unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                          bool headless = false);
+                          bool headless = false, bool logcosts = false);
     BlendingGlNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                           unsigned int displayWidth, unsigned int displayHeight,
                           unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                          bool headless = false);
+                          bool headless = false, bool logcosts = false);
     ~BlendingGlNddiDisplay();
 
     // To satisfy the NDimensionalDisplayInterfaceExtended interface

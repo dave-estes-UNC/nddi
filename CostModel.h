@@ -11,6 +11,10 @@
 
 #include <cassert>
 #include <iostream>
+#include <fstream>
+#include <stdlib.h>
+#include <time.h>
+
 
 // TODO(CDE): Sort out a clean way of including this, which is normally in NDimensionalDisplayInterface.h.
 #define COEFFICIENT_UNCHANGED INT16_MAX
@@ -72,13 +76,22 @@ namespace nddi {
         READ_ACCESS,
         WRITE_ACCESS
     } memory_access_t;
-    static const char* memory_access_text[] = {"READ_ACCESS", "WRITE_ACCESS"};
+    static const char* memory_access_text[] = {"\"READ_ACCESS\"", "\"WRITE_ACCESS\""};
+
+    enum log_charges {
+        NO_CHARGES = 0,
+        IV_CHARGES = 1 << 0,
+        CM_CHARGES = 1 << 1,
+        SC_CHARGES = 1 << 2,
+        FV_CHARGES = 1 << 3,
+        ALL_CHARGES = IV_CHARGES | CM_CHARGES | SC_CHARGES | FV_CHARGES
+    };
 
     class Charge {
     public:
         unsigned int sequenceNumber;
         Charge(unsigned int sequenceNumber) : sequenceNumber(sequenceNumber) {}
-        virtual void print() {}
+        virtual void print(ofstream &file) {}
     };
 
     /**
@@ -91,15 +104,15 @@ namespace nddi {
         unsigned int     end;
         InputVectorCharge(unsigned int sequenceNumber, memory_access_t access, unsigned int start, unsigned int end)
         : Charge(sequenceNumber), access(access), start(start), end(end) {}
-        void print() {
-            cout << "{" << endl;
-            cout << "  \"sequenceNumber\" : " << sequenceNumber << "," << endl;
-            cout << "  \"inputVectorCharge\" : {" << endl;
-            cout << "    \"access\" : " << memory_access_text[access] << "," << endl;
-            cout << "    \"start\" : " << start << "," << endl;
-            cout << "    \"end\" : " << end << "," << endl;
-            cout << "  }" << endl;
-            cout << "}," << endl;
+        void print(ofstream &file) {
+            file << "{" << endl;
+            file << "  \"sequenceNumber\" : " << sequenceNumber << "," << endl;
+            file << "  \"inputVectorCharge\" : {" << endl;
+            file << "    \"access\" : " << memory_access_text[access] << "," << endl;
+            file << "    \"start\" : " << start << "," << endl;
+            file << "    \"end\" : " << end << endl;
+            file << "  }" << endl;
+            file << "}" << endl;
         }
     };
 
@@ -115,21 +128,21 @@ namespace nddi {
         int                   col;
         CoefficientCharge(unsigned int sequenceNumber, memory_access_t access, vector<unsigned int> start, vector<unsigned int> end, int row, int col)
         : Charge(sequenceNumber), access(access), start(start), end(end), row(row), col(col) {}
-        void print() {
-            cout << "{" << endl;
-            cout << "  \"sequenceNumber\" : " << sequenceNumber << "," << endl;
-            cout << "  \"coefficientCharge\" : {" << endl;
-            cout << "    \"access\" : " << memory_access_text[access] << "," << endl;
-            cout << "    \"start\" : " << "[" << start[0];
-            for (int i = 1; i < start.size(); i++) { cout << "," << start[i]; }
-            cout << "]," << endl;
-            cout << "    \"end\" : " << "[" << end[0];
-            for (int i = 1; i < end.size(); i++) { cout << "," << end[i]; }
-            cout << "]," << endl;
-            cout << "    \"row\" : " << row << "," << endl;
-            cout << "    \"col\" : " << col << "," << endl;
-            cout << "  }" << endl;
-            cout << "}," << endl;
+        void print(ofstream &file) {
+            file << "{" << endl;
+            file << "  \"sequenceNumber\" : " << sequenceNumber << "," << endl;
+            file << "  \"coefficientCharge\" : {" << endl;
+            file << "    \"access\" : " << memory_access_text[access] << "," << endl;
+            file << "    \"start\" : " << "[" << start[0];
+            for (int i = 1; i < start.size(); i++) { file << "," << start[i]; }
+            file << "]," << endl;
+            file << "    \"end\" : " << "[" << end[0];
+            for (int i = 1; i < end.size(); i++) { file << "," << end[i]; }
+            file << "]," << endl;
+            file << "    \"row\" : " << row << "," << endl;
+            file << "    \"col\" : " << col << endl;
+            file << "  }" << endl;
+            file << "}" << endl;
         }
     };
 
@@ -144,30 +157,30 @@ namespace nddi {
         vector< vector<int> >  cm;
         CoefficientMatrixCharge(unsigned int sequenceNumber, memory_access_t access, vector<unsigned int> start, vector<unsigned int> end, vector< vector<int> > cm)
         : Charge(sequenceNumber), access(access), start(start), end(end), cm(cm) {}
-        void print() {
-            cout << "{" << endl;
-            cout << "  \"sequenceNumber\" : " << sequenceNumber << "," << endl;
-            cout << "  \"coefficientMatrixCharge\" : {" << endl;
-            cout << "    \"access\" : " << memory_access_text[access] << "," << endl;
-            cout << "    \"start\" : " << "[" << start[0];
-            for (int i = 1; i < start.size(); i++) { cout << "," << start[i]; }
-            cout << "]," << endl;
-            cout << "    \"end\" : " << "[" << end[0];
-            for (int i = 1; i < end.size(); i++) { cout << "," << end[i]; }
-            cout << "]," << endl;
-            cout << "    \"cm\" : " << "[";
+        void print(ofstream &file) {
+            file << "{" << endl;
+            file << "  \"sequenceNumber\" : " << sequenceNumber << "," << endl;
+            file << "  \"coefficientMatrixCharge\" : {" << endl;
+            file << "    \"access\" : " << memory_access_text[access] << "," << endl;
+            file << "    \"start\" : " << "[" << start[0];
+            for (int i = 1; i < start.size(); i++) { file << "," << start[i]; }
+            file << "]," << endl;
+            file << "    \"end\" : " << "[" << end[0];
+            for (int i = 1; i < end.size(); i++) { file << "," << end[i]; }
+            file << "]," << endl;
+            file << "    \"cm\" : " << "[";
             for (int row = 0; row < cm.size(); row++) {
-                if (row != 0) { cout << ","; }
-                cout << "[";
+                if (row != 0) { file << ","; }
+                file << "[";
                 for (int col = 0; col < cm[row].size(); col++) {
-                    if (col != 0) { cout << ","; }
-                    cout << cm[row][col];
+                    if (col != 0) { file << ","; }
+                    file << cm[row][col];
                 }
-                cout << "]";
+                file << "]";
             }
-            cout << "]," << endl;
-            cout << "  }" << endl;
-            cout << "}," << endl;
+            file << "]" << endl;
+            file << "  }" << endl;
+            file << "}" << endl;
         }
     };
 
@@ -181,19 +194,19 @@ namespace nddi {
         vector<unsigned int>  end;
         ScalerCharge(unsigned int sequenceNumber, memory_access_t access, vector<unsigned int> start, vector<unsigned int> end)
         : Charge(sequenceNumber), access(access), start(start), end(end) {}
-        void print() {
-            cout << "{" << endl;
-            cout << "  \"sequenceNumber\" : " << sequenceNumber << "," << endl;
-            cout << "  \"scalerCharge\" : {" << endl;
-            cout << "    \"access\" : " << memory_access_text[access] << "," << endl;
-            cout << "    \"start\" : " << "[" << start[0];
-            for (int i = 1; i < start.size(); i++) { cout << "," << start[i]; }
-            cout << "]," << endl;
-            cout << "    \"end\" : " << "[" << end[0];
-            for (int i = 1; i < end.size(); i++) { cout << "," << end[i]; }
-            cout << "]," << endl;
-            cout << "  }" << endl;
-            cout << "}," << endl;
+        void print(ofstream &file) {
+            file << "{" << endl;
+            file << "  \"sequenceNumber\" : " << sequenceNumber << "," << endl;
+            file << "  \"scalerCharge\" : {" << endl;
+            file << "    \"access\" : " << memory_access_text[access] << "," << endl;
+            file << "    \"start\" : " << "[" << start[0];
+            for (int i = 1; i < start.size(); i++) { file << "," << start[i]; }
+            file << "]," << endl;
+            file << "    \"end\" : " << "[" << end[0];
+            for (int i = 1; i < end.size(); i++) { file << "," << end[i]; }
+            file << "]" << endl;
+            file << "  }" << endl;
+            file << "}" << endl;
         }
     };
 
@@ -207,19 +220,19 @@ namespace nddi {
         vector<unsigned int>  end;
         FrameVolumeCharge(unsigned int sequenceNumber, memory_access_t access, vector<unsigned int> start, vector<unsigned int> end)
         : Charge(sequenceNumber), access(access), start(start), end(end) {}
-        void print() {
-            cout << "{" << endl;
-            cout << "  \"sequenceNumber\" : " << sequenceNumber << "," << endl;
-            cout << "  \"frameVolumeCharge\" : {" << endl;
-            cout << "    \"access\" : " << memory_access_text[access] << "," << endl;
-            cout << "    \"start\" : " << "[" << start[0];
-            for (int i = 1; i < start.size(); i++) { cout << "," << start[i]; }
-            cout << "]," << endl;
-            cout << "    \"end\" : " << "[" << end[0];
-            for (int i = 1; i < end.size(); i++) { cout << "," << end[i]; }
-            cout << "]," << endl;
-            cout << "  }" << endl;
-            cout << "}," << endl;
+        void print(ofstream &file) {
+            file << "{" << endl;
+            file << "  \"sequenceNumber\" : " << sequenceNumber << "," << endl;
+            file << "  \"frameVolumeCharge\" : {" << endl;
+            file << "    \"access\" : " << memory_access_text[access] << "," << endl;
+            file << "    \"start\" : " << "[" << start[0];
+            for (int i = 1; i < start.size(); i++) { file << "," << start[i]; }
+            file << "]," << endl;
+            file << "    \"end\" : " << "[" << end[0];
+            for (int i = 1; i < end.size(); i++) { file << "," << end[i]; }
+            file << "]" << endl;
+            file << "  }" << endl;
+            file << "}" << endl;
         }
     };
 
@@ -280,14 +293,24 @@ namespace nddi {
         unsigned long frameVolumeBytesRead;
         unsigned long frameVolumeBytesWritten;
 
+        vector<unsigned int> fvDimensions;
+        unsigned int inputVectorSize = 0;
         vector<Charge*> charges;
 
         bool headless = false;
-        bool logcosts = false;
+        unsigned char logcosts = NO_CHARGES;
+
+        ofstream logfile;
 
     public:
 
-        CostModel(bool headless, bool logcosts) : headless(headless), logcosts(logcosts) {
+        CostModel(bool headless, unsigned char logcosts)
+        : headless(headless), logcosts(logcosts) {
+            clearCosts();
+        }
+
+        CostModel(vector<unsigned int> &fvDimensions, unsigned int inputVectorSize, bool headless, unsigned char logcosts)
+        : fvDimensions(fvDimensions), inputVectorSize(inputVectorSize), headless(headless), logcosts(logcosts) {
             clearCosts();
         }
 
@@ -314,6 +337,10 @@ namespace nddi {
             frameVolumeWrites = 0;
             frameVolumeBytesRead = 0;
             frameVolumeBytesWritten = 0;
+            for (int i = 0; i < charges.size(); i++) {
+                delete(charges[i]);
+            }
+            charges.clear();
         }
 
         void registerInputVectorMemoryCharge(
@@ -334,7 +361,7 @@ namespace nddi {
                 inputVectorBytesWritten += bytes;
             }
 
-            if (logcosts) {
+            if (logcosts & IV_CHARGES) {
                 InputVectorCharge* c = new InputVectorCharge(charges.size(), access, start, end);
                 charges.push_back(c);
             }
@@ -363,7 +390,7 @@ namespace nddi {
                 coefficientPlaneBytesWritten += bytes;
             }
 
-            if (logcosts) {
+            if (logcosts & CM_CHARGES) {
                 CoefficientCharge* c = new CoefficientCharge(charges.size(), access, start, end, cmRow, cmCol);
                 charges.push_back(c);
             }
@@ -399,7 +426,7 @@ namespace nddi {
                 coefficientPlaneBytesWritten += bytes;
             }
 
-            if (logcosts) {
+            if (logcosts & CM_CHARGES) {
                 CoefficientMatrixCharge* c = new CoefficientMatrixCharge(charges.size(), access, start, end, coefficientMatrix);
                 charges.push_back(c);
             }
@@ -428,7 +455,7 @@ namespace nddi {
                 coefficientPlaneBytesWritten += bytes;
             }
 
-            if (logcosts) {
+            if (logcosts & SC_CHARGES) {
                 ScalerCharge* c = new ScalerCharge(charges.size(), access, start, end);
                 charges.push_back(c);
             }
@@ -456,7 +483,7 @@ namespace nddi {
                 frameVolumeBytesWritten += bytes;
             }
 
-            if (logcosts) {
+            if (logcosts & FV_CHARGES) {
                 FrameVolumeCharge* c = new FrameVolumeCharge(charges.size(), access, start, end);
                 charges.push_back(c);
             }
@@ -633,9 +660,44 @@ namespace nddi {
         }
 
         void printCharges() {
-            for (int i = 0; i < charges.size(); i++) {
-                charges[i]->print();
+
+            assert(fvDimensions.size() > 0);
+            assert(inputVectorSize > 0);
+
+            char filename[24];
+            srand(time(NULL));
+            sprintf(filename, "costlog-%x.json", rand() % 0xffffff + 1);
+
+            logfile.open(filename);
+            cout << filename;
+
+            logfile << "{\n" << endl;
+
+            logfile << "\"bytePerPixel\": " << BYTES_PER_PIXEL << "," << endl;
+            logfile << "\"bytePerIvValue\": " << BYTES_PER_IV_VALUE << "," << endl;
+            logfile << "\"bytePerCoefficient\": " << BYTES_PER_COEFF << "," << endl;
+            logfile << "\"bytePerScaler\": " << BYTES_PER_SCALER << "," << endl;
+
+            logfile << "\"inputVectorSize\": " << inputVectorSize << "," << endl;
+
+            logfile << "\"fvDimensions\": [";
+            for (int i = 0; i < fvDimensions.size(); i++) {
+                if (i > 0)
+                    logfile << ",";
+                logfile << fvDimensions[i];
             }
+            logfile << "]," << endl;
+
+            logfile << "\"charges\": [" << endl;
+            for (int i = 0; i < charges.size(); i++) {
+                if (i > 0)
+                    logfile << "," << endl;
+                charges[i]->print(logfile);
+            }
+            logfile << "]" << endl;
+
+            logfile << "\n}" << endl;
+            logfile.close();
         }
     };
 }

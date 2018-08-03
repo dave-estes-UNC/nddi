@@ -43,14 +43,14 @@ inline uint8_t TRUNCATE_BYTE(int32_t i) {
 
 SimpleNddiDisplay::SimpleNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                              unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                             bool headless, bool logcosts, bool fixed8x8Macroblocks, bool useSingleCoeffcientPlane) {
+                             bool headless, unsigned char logcosts, bool fixed8x8Macroblocks, bool useSingleCoeffcientPlane) {
     SimpleNddiDisplay(frameVolumeDimensionalSizes, 320, 240, numCoefficientPlanes, inputVectorSize);
 }
 
 SimpleNddiDisplay::SimpleNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                              unsigned int displayWidth, unsigned int displayHeight,
                              unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                             bool headless, bool logcosts, bool fixed8x8Macroblocks, bool useSingleCoeffcientPlane)
+                             bool headless, unsigned char logcosts, bool fixed8x8Macroblocks, bool useSingleCoeffcientPlane)
 : BaseNddiDisplay(frameVolumeDimensionalSizes, displayWidth, displayHeight, numCoefficientPlanes, inputVectorSize, headless, logcosts, fixed8x8Macroblocks, useSingleCoeffcientPlane) {
 
     numPlanes_ = numCoefficientPlanes;
@@ -61,7 +61,7 @@ SimpleNddiDisplay::SimpleNddiDisplay(vector<unsigned int> &frameVolumeDimensiona
     quiet_ = true;
 
     // Create the CostModel
-    costModel = new CostModel(headless, logcosts);
+    costModel = new CostModel(frameVolumeDimensionalSizes, inputVectorSize, headless, logcosts);
 
     // Setup Input Vector
     inputVector_ = new InputVector(costModel, inputVectorSize);

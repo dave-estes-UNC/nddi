@@ -15,12 +15,12 @@ public:
     SimpleNddiDisplay() {}
     SimpleNddiDisplay(std::vector<unsigned int> &frameVolumeDimensionalSizes,
                   unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                  bool headless = false, bool logcosts = false,
+                  bool headless = false, unsigned char logcosts = NO_CHARGES,
                   bool fixed8x8Macroblocks = false, bool useSingleCoeffcientPlane = false);
     SimpleNddiDisplay(std::vector<unsigned int> &frameVolumeDimensionalSizes,
                   unsigned int displayWidth, unsigned int displayHeight,
                   unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                  bool headless = false, bool logcosts = false,
+                  bool headless = false, unsigned char logcosts = NO_CHARGES,
                   bool fixed8x8Macroblocks = false, bool useSingleCoeffcientPlane = false);
     ~SimpleNddiDisplay();
 

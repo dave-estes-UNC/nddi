@@ -29,6 +29,7 @@ else:
     strides = args.strides.split(',')
     for stride in strides:
         fvStrideOrder.append(int(stride))
+
 print "Input Vector Size: ", ivSize
 print "Frame Volume Dimensions: ", fvDimensions
 print "Coefficient Matrix Size: ", ivSize, "x", len(fvDimensions)
@@ -47,18 +48,27 @@ l2 = Cache("L2", 512, 8, 64, "LRU", store_to=l3, load_from=l3)  # 256KB
 l1 = Cache("L1", 64, 8, 64, "LRU", store_to=l2, load_from=l2)  # 32KB
 cs = CacheSimulator(l1, mem)
 
-def fvToMem(a):
+def fvAccessRow(tuple, length, access):
     strideMultiplier = data["bytePerPixel"]
-    m = 0
+    mem = 0
+    bytes = length * data["bytePerPixel"]
     for strideOrder in fvStrideOrder:
-        m += a[strideOrder] * strideMultiplier
+        mem += tuple[strideOrder] * strideMultiplier
         strideMultiplier *= fvDimensions[strideOrder]
-    return m
+    if args.verbose:
+        print "Addr: ", mem, " Byte Count: ", bytes
+    if access == "READ_ACCESS":
+        cs.load(mem, bytes)
+    elif access == "WRITE_ACCESS":
+        cs.store(mem, bytes)
+    else:
+        sys.exit('ERROR Unknown access type. Should be READ_ACCESS or WRITE_ACCESS only.')
 
 count = args.limit
 for charge in data["charges"]:
-    count = count - 1
-    if count < 0:
+    if count:
+        count = count - 1
+        count < 0
         break
     if "frameVolumeCharge" in charge:
         if args.verbose:
@@ -73,17 +83,8 @@ for charge in data["charges"]:
         while carry == 0:
             for idx, strideOrder in enumerate(fvStrideOrder):
                 if idx == 0:
-                    mem = fvToMem(current)
-                    bytes = (end[strideOrder] - start[strideOrder] + 1) * data["bytePerPixel"]
+                    fvAccessRow(current, end[strideOrder] - start[strideOrder] + 1, access)
                     carry = 1
-                    if args.verbose:
-                        print "Addr: ", mem, " Byte Count: ", bytes
-                    if access == "READ_ACCESS":
-                        cs.load(mem, length = bytes)
-                    elif access == "WRITE_ACCESS":
-                        cs.store(mem, length = bytes)
-                    else:
-                        sys.exit('ERROR Unknown access type. Should be READ_ACCESS or WRITE_ACCESS only.')
                 else:
                     current[strideOrder] += carry
                     if current[strideOrder] > end[strideOrder]:

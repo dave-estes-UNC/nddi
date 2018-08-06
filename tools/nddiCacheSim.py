@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-import sys, json, argparse
+import sys, argparse
+import json
 from cachesim import CacheSimulator, Cache, MainMemory
 
 parser = argparse.ArgumentParser(description='Process json from the NDDI cost model and simulate the cache accesses.')
@@ -17,10 +18,9 @@ if args.verbose:
 print "Parsing json from file: ", args.file
 fp = open(args.file)
 data = json.load(fp)
-fp.close()
 
-ivSize = data["inputVectorSize"]
-fvDimensions = data["fvDimensions"]
+ivSize = data['config']['inputVectorSize']
+fvDimensions = data['config']['fvDimensions']
 fvStrideOrder = []
 if (args.strides == None):
     for idx, val in enumerate(fvDimensions):
@@ -29,15 +29,19 @@ else:
     strides = args.strides.split(',')
     for stride in strides:
         fvStrideOrder.append(int(stride))
+bpp = data['config']['bytePerPixel']
+bpiv = data['config']['bytePerIvValue']
+bpc = data['config']['bytePerCoefficient']
+bps = data['config']['bytePerScaler']
 
 print "Input Vector Size: ", ivSize
 print "Frame Volume Dimensions: ", fvDimensions
 print "Coefficient Matrix Size: ", ivSize, "x", len(fvDimensions)
 print "Frame Volume Stride Order: ", fvStrideOrder
-print "Bytes per Pixel: ", data["bytePerPixel"]
-print "Bytes per Input Vector value: ", data["bytePerIvValue"]
-print "Bytes per Coefficient: ", data["bytePerCoefficient"]
-print "Bytes per Scaler: ", data["bytePerScaler"]
+print "Bytes per Pixel: ", bpp
+print "Bytes per Input Vector value: ", bpiv
+print "Bytes per Coefficient: ", bpc
+print "Bytes per Scaler: ", bps
 
 
 mem = MainMemory()
@@ -49,9 +53,9 @@ l1 = Cache("L1", 64, 8, 64, "LRU", store_to=l2, load_from=l2)  # 32KB
 cs = CacheSimulator(l1, mem)
 
 def fvAccessRow(tuple, length, access):
-    strideMultiplier = data["bytePerPixel"]
+    strideMultiplier = bpp
     mem = 0
-    bytes = length * data["bytePerPixel"]
+    bytes = length * bpp
     for strideOrder in fvStrideOrder:
         mem += tuple[strideOrder] * strideMultiplier
         strideMultiplier *= fvDimensions[strideOrder]
@@ -65,7 +69,7 @@ def fvAccessRow(tuple, length, access):
         sys.exit('ERROR Unknown access type. Should be READ_ACCESS or WRITE_ACCESS only.')
 
 count = args.limit
-for charge in data["charges"]:
+for charge in data['charges']:
     if count:
         count = count - 1
         count < 0
@@ -97,3 +101,4 @@ for charge in data["charges"]:
 
 cs.force_write_back()
 cs.print_stats()
+fp.close()

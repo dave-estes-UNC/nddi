@@ -673,20 +673,20 @@ namespace nddi {
 
             logfile << "{\n" << endl;
 
-            logfile << "\"bytePerPixel\": " << BYTES_PER_PIXEL << "," << endl;
-            logfile << "\"bytePerIvValue\": " << BYTES_PER_IV_VALUE << "," << endl;
-            logfile << "\"bytePerCoefficient\": " << BYTES_PER_COEFF << "," << endl;
-            logfile << "\"bytePerScaler\": " << BYTES_PER_SCALER << "," << endl;
-
-            logfile << "\"inputVectorSize\": " << inputVectorSize << "," << endl;
-
-            logfile << "\"fvDimensions\": [";
+	    logfile << "\"config\" : {" << endl;
+            logfile << "  \"bytePerPixel\": " << BYTES_PER_PIXEL << "," << endl;
+            logfile << "  \"bytePerIvValue\": " << BYTES_PER_IV_VALUE << "," << endl;
+            logfile << "  \"bytePerCoefficient\": " << BYTES_PER_COEFF << "," << endl;
+            logfile << "  \"bytePerScaler\": " << BYTES_PER_SCALER << "," << endl;
+            logfile << "  \"inputVectorSize\": " << inputVectorSize << "," << endl;
+            logfile << "  \"fvDimensions\": [";
             for (int i = 0; i < fvDimensions.size(); i++) {
                 if (i > 0)
                     logfile << ",";
                 logfile << fvDimensions[i];
             }
-            logfile << "]," << endl;
+            logfile << "]" << endl;
+	    logfile << "}," << endl;
 
             logfile << "\"charges\": [" << endl;
             for (int i = 0; i < charges.size(); i++) {

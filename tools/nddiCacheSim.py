@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 
 import sys, argparse
+import urllib
+from urllib import urlopen
 import json
+import ijson.backends.yajl2_cffi as ijson
 from cachesim import CacheSimulator, Cache, MainMemory
 
 parser = argparse.ArgumentParser(description='Process json from the NDDI cost model and simulate the cache accesses.')
@@ -10,17 +13,25 @@ parser.add_argument('--strides', help='provide a stride order other than the def
 parser.add_argument('--limit', help='set the limit to the number of charges parsed (useful for debugging)', type=int)
 parser.add_argument('--verbose', action='store_const', const=True, default=False,
                     help='prints additional information while processing the json')
+parser.add_argument('--ijson', action='store_const', const=True, default=False,
+                    help='Uses ijson instead of the json package')
 
 args = parser.parse_args()
 if args.verbose:
     print "Arguments: ", args
 
 print "Parsing json from file: ", args.file
-fp = open(args.file)
-data = json.load(fp)
+fp = urlopen(args.file)
+if args.ijson:
+    objects = ijson.items(fp, 'config')
+    config = objects.next()
+else:
+    data = json.load(fp)
+    config = data['config']
+fp.close()
 
-ivSize = data['config']['inputVectorSize']
-fvDimensions = data['config']['fvDimensions']
+ivSize = config['inputVectorSize']
+fvDimensions = config['fvDimensions']
 fvStrideOrder = []
 if (args.strides == None):
     for idx, val in enumerate(fvDimensions):
@@ -29,10 +40,10 @@ else:
     strides = args.strides.split(',')
     for stride in strides:
         fvStrideOrder.append(int(stride))
-bpp = data['config']['bytePerPixel']
-bpiv = data['config']['bytePerIvValue']
-bpc = data['config']['bytePerCoefficient']
-bps = data['config']['bytePerScaler']
+bpp = config['bytePerPixel']
+bpiv = config['bytePerIvValue']
+bpc = config['bytePerCoefficient']
+bps = config['bytePerScaler']
 
 print "Input Vector Size: ", ivSize
 print "Frame Volume Dimensions: ", fvDimensions
@@ -68,11 +79,17 @@ def fvAccessRow(tuple, length, access):
     else:
         sys.exit('ERROR Unknown access type. Should be READ_ACCESS or WRITE_ACCESS only.')
 
-count = args.limit
-for charge in data['charges']:
-    if count:
-        count = count - 1
-        count < 0
+charges = []
+if args.ijson:
+    fp = urlopen(args.file)
+    charges = ijson.items(fp, 'charges.item')
+else:
+    charges = data['charges']
+
+count = 0
+for charge in charges:
+    count += 1
+    if args.limit and count == args.limit:
         break
     if "frameVolumeCharge" in charge:
         if args.verbose:
@@ -99,6 +116,9 @@ for charge in data['charges']:
     else:
         sys.exit('ERROR Can only handle Frame Volume Charges at this time.')
 
+print count
+if args.ijson:
+    fp.close()
+
 cs.force_write_back()
 cs.print_stats()
-fp.close()

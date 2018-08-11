@@ -461,6 +461,28 @@ namespace nddi {
             }
         }
 
+        bool combineFrameVolumeMemoryCharge() {
+            bool adj = false;
+            FrameVolumeCharge *pre, *cur;
+            if (charges.size() >= 2) {
+              auto end = charges.end();
+              cur = (FrameVolumeCharge*)*(end - 1);
+              pre = (FrameVolumeCharge*)*(end - 2);
+              adj = (pre->access == cur->access);
+              for (int i = 0; i < cur->start.size() && adj; i++) {
+                adj = ((cur->start[i] == pre->start[i]) && (cur->end[i] == pre->end[i])) || (cur->start[i] == (pre->end[i] + 1));
+              }
+              if (adj) {
+                for (int i = 0; i < cur->start.size(); i++) {
+                  pre->end[i] = cur->end[i];
+                }
+                delete charges.back();
+                charges.pop_back();
+              }
+            }
+            return adj;
+        }
+
         void registerFrameVolumeMemoryCharge(
                 memory_access_t access,
                 vector<unsigned int> &start,
@@ -486,6 +508,7 @@ namespace nddi {
             if (logcosts & FV_CHARGES) {
                 FrameVolumeCharge* c = new FrameVolumeCharge(charges.size(), access, start, end);
                 charges.push_back(c);
+                while (combineFrameVolumeMemoryCharge()) {}
             }
         }
 
@@ -673,7 +696,7 @@ namespace nddi {
 
             logfile << "{\n" << endl;
 
-	    logfile << "\"config\" : {" << endl;
+            logfile << "\"config\" : {" << endl;
             logfile << "  \"bytePerPixel\": " << BYTES_PER_PIXEL << "," << endl;
             logfile << "  \"bytePerIvValue\": " << BYTES_PER_IV_VALUE << "," << endl;
             logfile << "  \"bytePerCoefficient\": " << BYTES_PER_COEFF << "," << endl;
@@ -686,7 +709,7 @@ namespace nddi {
                 logfile << fvDimensions[i];
             }
             logfile << "]" << endl;
-	    logfile << "}," << endl;
+            logfile << "}," << endl;
 
             logfile << "\"charges\": [" << endl;
             for (int i = 0; i < charges.size(); i++) {

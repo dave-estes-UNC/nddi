@@ -71,6 +71,14 @@ unsigned int BaseNddiDisplay::NumCoefficientPlanes() {
     return numPlanes_;
 }
 
+unsigned int BaseNddiDisplay::CMWidth() {
+    return CM_WIDTH;
+}
+
+unsigned int BaseNddiDisplay::CMHeight() {
+    return CM_HEIGHT;
+}
+
 void BaseNddiDisplay::PutPixel(Pixel p, vector<unsigned int> &location) {
 
     // Register transmission cost first

@@ -31,17 +31,10 @@ public:
     Pixel* GetFrameBuffer();
     Pixel* GetFrameBuffer(unsigned int sub_x, unsigned int sub_y, unsigned int sub_w, unsigned int sub_h);
 
-    /**
-     * Triggers a simulated render that only records the cost estimated cost involved.
-     */
-    void SimulateRender();
-    void SimulateRender(unsigned int sub_x, unsigned int sub_y, unsigned int sub_w, unsigned int sub_h);
-
 protected:
     void Render();
     void Render(unsigned int sub_x, unsigned int sub_y, unsigned int sub_w, unsigned int sub_h);
     void ComputePixels(unsigned int x, unsigned int y, unsigned int length, bool doCostCalculation);
-    void RegisterBulkRenderCost(unsigned int sub_x, unsigned int sub_y, unsigned int sub_w, unsigned int sub_h);
 
 
 protected:

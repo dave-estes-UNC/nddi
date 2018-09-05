@@ -119,12 +119,6 @@ void SimpleNddiDisplay::Render(unsigned int sub_x, unsigned int sub_y, unsigned 
         }
     }
 
-    // Update the cost model for the in bulk now if we are using OpenMP since we bypassed the traditional
-    // getters for input vector, frame volume, and coefficient matrix in ComputePixel
-#ifdef USE_OMP
-    RegisterBulkRenderCost(sub_x, sub_y, sub_w, sub_h);
-#endif
-
     if (!quiet_) {
         gettimeofday(&endTime, NULL);
         printf("Render Statistics:\n  Size: %zdx%zd - FPS: %f\n",
@@ -258,41 +252,6 @@ void SimpleNddiDisplay::ComputePixels(unsigned int x, unsigned int y, unsigned i
             frameBuffer_[y * displayWidth_ + x] = q;
         }
     }
-}
-
-void SimpleNddiDisplay::RegisterBulkRenderCost(unsigned int sub_x, unsigned int sub_y, unsigned int sub_w, unsigned int sub_h) {
-
-    // For each pixel computed with all of the planes, the input vector (except x,y) is read
-    costModel->registerBulkMemoryCharge(INPUT_VECTOR_COMPONENT,
-                                        sub_w * sub_h * numPlanes_ * CM_HEIGHT * (CM_WIDTH - 2),
-                                        READ_ACCESS,
-                                        sub_w * sub_h * numPlanes_ * CM_HEIGHT * (CM_WIDTH - 2) * BYTES_PER_IV_VALUE);
-    // For each pixel computed with all of the planes, the coefficient and scaler is read
-    costModel->registerBulkMemoryCharge(COEFFICIENT_MATRIX_COMPONENT,
-                                        sub_w * sub_h * numPlanes_ * (CM_HEIGHT * CM_WIDTH) +
-                                        sub_w * sub_h * numPlanes_ * (1),
-                                        READ_ACCESS,
-                                        sub_w * sub_h * numPlanes_ * (CM_HEIGHT * CM_WIDTH) * BYTES_PER_COEFF +
-                                        sub_w * sub_h * numPlanes_ * (1) * BYTES_PER_SCALER);
-    // For each pixel computed with all of the planes, a pixel sample is pulled from the frame volume
-    costModel->registerBulkMemoryCharge(FRAME_VOLUME_COMPONENT,
-                                        sub_w * sub_h * numPlanes_,
-                                        READ_ACCESS,
-                                        sub_w * sub_h * numPlanes_ * BYTES_PER_PIXEL);
-    costModel->registerPixelMappingCharge(sub_w * sub_h);
-}
-
-void SimpleNddiDisplay::SimulateRender() {
-    SimulateRender(0, 0, displayWidth_, displayHeight_);
-}
-
-void SimpleNddiDisplay::SimulateRender(unsigned int sub_x, unsigned int sub_y, unsigned int sub_w, unsigned int sub_h) {
-#ifdef SUPRESS_EXCESS_RENDERING
-    if (changed_) {
-        RegisterBulkRenderCost(sub_x, sub_y, sub_w, sub_h);
-        changed_ = false;
-    }
-#endif
 }
 
 Pixel* SimpleNddiDisplay::GetFrameBuffer() {

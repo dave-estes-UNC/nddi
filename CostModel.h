@@ -237,33 +237,6 @@ namespace nddi {
     };
 
     /**
-     * Represents the number of bytes sent over the NDDI Link.
-     */
-    // TODO(CDE): Convert to a proper charge object.
-    typedef struct {
-        unsigned long    numBytes;
-    } link_charge_t;
-
-    /**
-     * Represents the number of pixel blend operations where each operation alpha
-     * blends two pixels.
-     */
-    // TODO(CDE): Convert to a proper charge object.
-    typedef struct {
-        unsigned long     numBlends;
-    } pixel_blend_charge_t;
-
-    /**
-     * Represents the number of pixel mapping operations, where each operation is
-     * a matrix multiplication.
-     */
-    // TODO(CDE): Convert to a proper charge object.
-    typedef struct {
-        unsigned long     numMappings;
-    } pixel_mapping_charge_t;
-
-
-    /**
      * The CostModel allows different types of charges to be made and will run reports
      * later.
      */
@@ -346,9 +319,10 @@ namespace nddi {
         void registerInputVectorMemoryCharge(
                 memory_access_t access,
                 unsigned int start,
-                unsigned int end) {
+                unsigned int end,
+                unsigned int count = 1) {
 
-            unsigned int bytes = (end - start + 1) * BYTES_PER_IV_VALUE;
+            unsigned int bytes = (end - start + 1) * BYTES_PER_IV_VALUE * count;
             if (access == READ_ACCESS) {
 #pragma omp atomic
                 inputVectorReads++;
@@ -442,7 +416,7 @@ namespace nddi {
             for (int i = 0; i < start.size(); i++) {
                 bytes *= end[i] - start[i] + 1;
             }
-            // TODO(CDE): Update to use specific scaler counts. PixelBridge statistics and csv will need to be udpated.
+            // TODO(CDE): Update to use specific scaler counts. PixelBridge statistics and csv will need to be updated.
             if (access == READ_ACCESS) {
 #pragma omp atomic
                 coefficientPlaneReads++;
@@ -459,28 +433,6 @@ namespace nddi {
                 ScalerCharge* c = new ScalerCharge(charges.size(), access, start, end);
                 charges.push_back(c);
             }
-        }
-
-        bool combineFrameVolumeMemoryCharge() {
-            bool adj = false;
-            FrameVolumeCharge *pre, *cur;
-            if (charges.size() >= 2) {
-              auto end = charges.end();
-              cur = (FrameVolumeCharge*)*(end - 1);
-              pre = (FrameVolumeCharge*)*(end - 2);
-              adj = (pre->access == cur->access);
-              for (int i = 0; i < cur->start.size() && adj; i++) {
-                adj = ((cur->start[i] == pre->start[i]) && (cur->end[i] == pre->end[i])) || (cur->start[i] == (pre->end[i] + 1));
-              }
-              if (adj) {
-                for (int i = 0; i < cur->start.size(); i++) {
-                  pre->end[i] = cur->end[i];
-                }
-                delete charges.back();
-                charges.pop_back();
-              }
-            }
-            return adj;
         }
 
         void registerFrameVolumeMemoryCharge(
@@ -508,59 +460,6 @@ namespace nddi {
             if (logcosts & FV_CHARGES) {
                 FrameVolumeCharge* c = new FrameVolumeCharge(charges.size(), access, start, end);
                 charges.push_back(c);
-                while (combineFrameVolumeMemoryCharge()) {}
-            }
-        }
-
-        void registerBulkMemoryCharge(component_t component,
-                                      unsigned long accessCount,
-                                      memory_access_t access,
-                                      unsigned long numBytes) {
-
-            switch (component) {
-                case INPUT_VECTOR_COMPONENT:
-                    if (access == READ_ACCESS) {
-#pragma omp atomic
-                        inputVectorReads += accessCount;
-#pragma omp atomic
-                        inputVectorBytesRead += numBytes;
-                    } else {
-#pragma omp atomic
-                        inputVectorWrites += accessCount;
-#pragma omp atomic
-                        inputVectorBytesWritten += numBytes;
-                    }
-                    break;
-                case COEFFICIENT_MATRIX_COMPONENT:
-                // TODO(CDE): Add seperate counts for SCALER_COMPONENT. Will require changes anywhere bulk memory charges are made.
-                case SCALER_COMPONENT:
-                    if (access == READ_ACCESS) {
-#pragma omp atomic
-                        coefficientPlaneReads += accessCount;
-#pragma omp atomic
-                        coefficientPlaneBytesRead += numBytes;
-                    } else {
-#pragma omp atomic
-                        coefficientPlaneWrites += accessCount;
-#pragma omp atomic
-                        coefficientPlaneBytesWritten += numBytes;
-                    }
-                    break;
-                case FRAME_VOLUME_COMPONENT:
-                    if (access == READ_ACCESS) {
-#pragma omp atomic
-                        frameVolumeReads += accessCount;
-#pragma omp atomic
-                        frameVolumeBytesRead += numBytes;
-                    } else {
-#pragma omp atomic
-                        frameVolumeWrites += accessCount;
-#pragma omp atomic
-                        frameVolumeBytesWritten += numBytes;
-                    }
-                    break;
-                default:
-                    break;
             }
         }
 

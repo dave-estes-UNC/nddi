@@ -126,6 +126,8 @@ namespace nddi {
         unsigned int DisplayWidth();
         unsigned int DisplayHeight();
         unsigned int NumCoefficientPlanes();
+        unsigned int CMWidth();
+        unsigned int CMHeight();
         void PutPixel(Pixel p, vector<unsigned int> &location);
         void CopyPixelStrip(Pixel* p, vector<unsigned int> &start, vector<unsigned int> &end);
         void CopyPixels(Pixel* p, vector<unsigned int> &start, vector<unsigned int> &end);
@@ -146,6 +148,7 @@ namespace nddi {
         void Mute() { quiet_ = true; }
         void Unmute() { quiet_ = false; }
         CostModel* GetCostModel();
+        bool CheckAndClearDirty() { bool c = changed_; changed_ = false; return c; }
     };
 
 }

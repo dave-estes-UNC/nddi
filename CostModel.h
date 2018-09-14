@@ -13,6 +13,8 @@
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
 #include <time.h>
 
 
@@ -587,7 +589,7 @@ namespace nddi {
             assert(inputVectorSize > 0);
 
             char filename[24];
-            srand(time(NULL));
+            srand(time(NULL) * getpid());
             sprintf(filename, "costlog-%x.json", rand() % 0xffffff + 1);
 
             logfile.open(filename);

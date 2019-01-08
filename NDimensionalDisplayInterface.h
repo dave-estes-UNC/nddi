@@ -19,6 +19,52 @@
 #include <cereal/archives/xml.hpp>
 ///\endcond
 
+/**
+ * \brief Special value when passing coefficients indicating that the coefficient in that location should
+ *        remain unchanged.
+ *
+ * When specifying coefficient matrices for purposes of updating the coefficient plane, the NDDI client
+ * can use this value for one or more of the elements in the matrix if they would like the element in the
+ * same location of the destination coefficient matrix to remain unchanged.
+ */
+#define COEFFICIENT_UNCHANGED INT16_MAX
+
+/**
+ * \brief Special value when passing coefficients indicating that the coefficient's X coordinate should
+ *        be used as its value.
+ *
+ * Special value when passing coefficients indicating that the coefficient's X coordinate should
+ * be used as its value.
+ */
+#define COEFFICIENT_MATRIX_X (INT16_MIN + 2)
+
+/**
+ * \brief Special value when passing coefficients indicating that the coefficient's Y coordinate should
+ *        be used as its value.
+ *
+ * Special value when passing coefficients indicating that the coefficient's Y coordinate should
+ * be used as its value.
+ */
+#define COEFFICIENT_MATRIX_Y (INT16_MIN + 1)
+  
+/**
+ * \brief Special value when passing coefficients indicating that the coefficient's P (plane) coordinate should
+ *        be used as its value.
+ *
+ * Special value when passing coefficients indicating that the coefficient's P (plane) coordinate should
+ * be used as its value.
+ */
+#define COEFFICIENT_MATRIX_P (INT16_MIN + 0)
+
+/**
+ * \brief The default value indicating a full scaler.
+ *
+ * The default value indicated a full scaler. Can be changed by the client when configuring the
+ * nDDI display.
+ */
+#define DEFAULT_FULL_SCALER 256
+
+
 using namespace std;
 
 /**
@@ -27,51 +73,6 @@ using namespace std;
  * Namespace for the entire nDDI API.
  */
 namespace nddi {
-
-    /**
-     * \brief Special value when passing coefficients indicating that the coefficient in that location should
-     *        remain unchanged.
-     *
-     * When specifying coefficient matrices for purposes of updating the coefficient plane, the NDDI client
-     * can use this value for one or more of the elements in the matrix if they would like the element in the
-     * same location of the destination coefficient matrix to remain unchanged.
-     */
-    #define COEFFICIENT_UNCHANGED INT16_MAX
-
-    /**
-     * \brief Special value when passing coefficients indicating that the coefficient's X coordinate should
-     *        be used as its value.
-     *
-     * Special value when passing coefficients indicating that the coefficient's X coordinate should
-     * be used as its value.
-     */
-    #define COEFFICIENT_MATRIX_X (INT16_MIN + 2)
-
-    /**
-     * \brief Special value when passing coefficients indicating that the coefficient's Y coordinate should
-     *        be used as its value.
-     *
-     * Special value when passing coefficients indicating that the coefficient's Y coordinate should
-     * be used as its value.
-     */
-    #define COEFFICIENT_MATRIX_Y (INT16_MIN + 1)
-  
-    /**
-     * \brief Special value when passing coefficients indicating that the coefficient's P (plane) coordinate should
-     *        be used as its value.
-     *
-     * Special value when passing coefficients indicating that the coefficient's P (plane) coordinate should
-     * be used as its value.
-     */
-    #define COEFFICIENT_MATRIX_P (INT16_MIN + 0)
-
-    /**
-     * \brief The default value indicating a full scaler.
-     *
-     * The default value indicated a full scaler. Can be changed by the client when configuring the
-     * nDDI display.
-     */
-    #define DEFAULT_FULL_SCALER 256
 
     /**
      * \brief Union representing an RGBA 32-bit pixel.
@@ -223,7 +224,7 @@ namespace nddi {
          *                                    frame volume will be configured with a two-element vector with 4 and 4 in it.
          * @param numCoefficientPlanes Specifies how many of the maximum coefficient planes will be used.
          * @param inputVectorSize Used to configure the size of the input vector. It must be greater than or equal to two.
-         * @param fixed8x8MacroBlocks Configuration option which can configure the nDDI display to have fixed macroblocks.
+         * @param fixed8x8Macroblocks Configuration option which can configure the nDDI display to have fixed macroblocks.
          *                            This is strictly used for memory optimizations so that one coefficient matrix is used
          *                            for an entire macro block instead of one per pixel location. Note: This is still per plane.
          * @param useSingleCoefficientPlane Configuration option which can configure the display implementation to use only one
@@ -234,7 +235,7 @@ namespace nddi {
          */
         NDimensionalDisplayInterface(vector<unsigned int> &frameVolumeDimensionalSizes,
                                      unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                                     bool fixed8x8Macroblocks, bool useSingleCoeffcientPlane) {}
+                                     bool fixed8x8Macroblocks, bool useSingleCoefficientPlane) {}
         /**
          * \brief Full constructor which additionally allows the display size to be configured.
          *
@@ -248,7 +249,7 @@ namespace nddi {
          * @param displayHeight Used to configure the width of the display if it is less than the display device.
          * @param numCoefficientPlanes Specifies how many of the maximum coefficient planes will be used.
          * @param inputVectorSize Used to configure the size of the input vector. It must be greater than or equal to two.
-         * @param fixed8x8MacroBlocks Configuration option which can configure the nDDI display to have fixed macroblocks.
+         * @param fixed8x8Macroblocks Configuration option which can configure the nDDI display to have fixed macroblocks.
          *                            This is strictly used for memory optimizations so that one coefficient matrix is used
          *                            for an entire macro block instead of one per pixel location. Note: This is still per plane.
          * @param useSingleCoefficientPlane Configuration option which can configure the display implementation to use only one
@@ -260,7 +261,7 @@ namespace nddi {
         NDimensionalDisplayInterface(vector<unsigned int> &frameVolumeDimensionalSizes,
                                      unsigned int displayWidth, unsigned int displayHeight,
                                      unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                                     bool fixed8x8Macroblocks, bool useSingleCoeffcientPlane) {}
+                                     bool fixed8x8Macroblocks, bool useSingleCoefficientPlane) {}
 
         /**
          * \brief Used to query the display width.

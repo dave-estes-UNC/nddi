@@ -24,7 +24,7 @@ BaseNddiDisplay::BaseNddiDisplay() :
 
 BaseNddiDisplay::BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                                  unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                                 bool headless, unsigned char logcosts, bool fixed8x8Macroblocks, bool useSingleCoeffcientPlane) :
+                                 bool headless, unsigned char logcosts, bool fixed8x8Macroblocks, bool useSingleCoefficientPlane) :
         displayWidth_(0),
         displayHeight_(0),
         numPlanes_(numCoefficientPlanes),
@@ -34,7 +34,7 @@ BaseNddiDisplay::BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSiz
         coefficientPlanes_(NULL),
         costModel(NULL),
         fixed8x8Macroblocks_(fixed8x8Macroblocks),
-        useSingleCoefficientPlane_(useSingleCoeffcientPlane),
+        useSingleCoefficientPlane_(useSingleCoefficientPlane),
         quiet_(false),
         changed_(false)
 {}
@@ -42,7 +42,7 @@ BaseNddiDisplay::BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSiz
 BaseNddiDisplay::BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                                  unsigned int displayWidth, unsigned int displayHeight,
                                  unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                                 bool headless, unsigned char logcosts, bool fixed8x8Macroblocks, bool useSingleCoeffcientPlane) :
+                                 bool headless, unsigned char logcosts, bool fixed8x8Macroblocks, bool useSingleCoefficientPlane) :
         displayWidth_(displayWidth),
         displayHeight_(displayHeight),
         numPlanes_(numCoefficientPlanes),
@@ -52,7 +52,7 @@ BaseNddiDisplay::BaseNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSiz
         coefficientPlanes_(NULL),
         costModel(NULL),
         fixed8x8Macroblocks_(fixed8x8Macroblocks),
-        useSingleCoefficientPlane_(useSingleCoeffcientPlane),
+        useSingleCoefficientPlane_(useSingleCoefficientPlane),
         quiet_(false),
         changed_(false)
 {}

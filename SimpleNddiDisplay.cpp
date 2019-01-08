@@ -43,15 +43,15 @@ inline uint8_t TRUNCATE_BYTE(int32_t i) {
 
 SimpleNddiDisplay::SimpleNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                              unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                             bool headless, unsigned char logcosts, bool fixed8x8Macroblocks, bool useSingleCoeffcientPlane) {
+                             bool headless, unsigned char logcosts, bool fixed8x8Macroblocks, bool useSingleCoefficientPlane) {
     SimpleNddiDisplay(frameVolumeDimensionalSizes, 320, 240, numCoefficientPlanes, inputVectorSize);
 }
 
 SimpleNddiDisplay::SimpleNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                              unsigned int displayWidth, unsigned int displayHeight,
                              unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                             bool headless, unsigned char logcosts, bool fixed8x8Macroblocks, bool useSingleCoeffcientPlane)
-: BaseNddiDisplay(frameVolumeDimensionalSizes, displayWidth, displayHeight, numCoefficientPlanes, inputVectorSize, headless, logcosts, fixed8x8Macroblocks, useSingleCoeffcientPlane) {
+                             bool headless, unsigned char logcosts, bool fixed8x8Macroblocks, bool useSingleCoefficientPlane)
+: BaseNddiDisplay(frameVolumeDimensionalSizes, displayWidth, displayHeight, numCoefficientPlanes, inputVectorSize, headless, logcosts, fixed8x8Macroblocks, useSingleCoefficientPlane) {
 
     numPlanes_ = numCoefficientPlanes;
     frameVolumeDimensionalSizes_ = frameVolumeDimensionalSizes;
@@ -73,7 +73,7 @@ SimpleNddiDisplay::SimpleNddiDisplay(vector<unsigned int> &frameVolumeDimensiona
     coefficientPlanes_ = new CoefficientPlanes(costModel,
             displayWidth_, displayHeight_, numCoefficientPlanes,
             CM_WIDTH, CM_HEIGHT,
-            fixed8x8Macroblocks, useSingleCoeffcientPlane);
+            fixed8x8Macroblocks, useSingleCoefficientPlane);
 
     // Setup framebuffer and initialize to black
     frameBuffer_ = (Pixel*)malloc(sizeof(Pixel) * displayWidth_ * displayHeight_);

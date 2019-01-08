@@ -9,7 +9,7 @@
 
 GlNddiDisplay::GlNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                              unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                             bool headless, unsigned char logcosts, bool fixed8x8Macroblocks, bool useSingleCoeffcientPlane) {
+                             bool headless, unsigned char logcosts, bool fixed8x8Macroblocks, bool useSingleCoefficientPlane) {
     texture_ = 0;
     GlNddiDisplay(frameVolumeDimensionalSizes, 320, 240, numCoefficientPlanes, inputVectorSize);
 }
@@ -17,8 +17,8 @@ GlNddiDisplay::GlNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
 GlNddiDisplay::GlNddiDisplay(vector<unsigned int> &frameVolumeDimensionalSizes,
                              unsigned int displayWidth, unsigned int displayHeight,
                              unsigned int numCoefficientPlanes, unsigned int inputVectorSize,
-                             bool headless, unsigned char logcosts, bool fixed8x8Macroblocks, bool useSingleCoeffcientPlane)
-: SimpleNddiDisplay(frameVolumeDimensionalSizes, displayWidth, displayHeight, numCoefficientPlanes, inputVectorSize, headless, logcosts, fixed8x8Macroblocks, useSingleCoeffcientPlane) {
+                             bool headless, unsigned char logcosts, bool fixed8x8Macroblocks, bool useSingleCoefficientPlane)
+: SimpleNddiDisplay(frameVolumeDimensionalSizes, displayWidth, displayHeight, numCoefficientPlanes, inputVectorSize, headless, logcosts, fixed8x8Macroblocks, useSingleCoefficientPlane) {
 
     // allocate a texture name
     glGenTextures( 1, &texture_ );
